@@ -8,6 +8,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
 . "$REPO_ROOT/scripts/install/runtimes.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
+. "$REPO_ROOT/scripts/install/tailscale.sh"
 
 ensure_command_line_tools() {
   if xcode-select -p >/dev/null 2>&1; then
@@ -80,6 +81,7 @@ main() {
       ensure_homebrew
       load_homebrew_env
       install_brew_bundles
+      install_macos_tailscale
       install_macos_runtimes
       install_macos_oh_my_zsh
       ;;

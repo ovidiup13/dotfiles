@@ -7,6 +7,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 . "$REPO_ROOT/scripts/lib/common.sh"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
+. "$REPO_ROOT/scripts/install/tailscale.sh"
 
 require_apt() {
   if command_exists apt-get; then
@@ -40,6 +41,7 @@ main() {
   require_apt
   export DEBIAN_FRONTEND=noninteractive
   install_apt_packages
+  install_ubuntu_tailscale
   verify_ubuntu_shell_prereqs
 }
 

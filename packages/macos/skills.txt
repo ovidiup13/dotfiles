@@ -1,10 +1,11 @@
-github/awesome-copilot
-microsoft/playwright-cli
-mastra-ai/skills
-sickn33/antigravity-awesome-skills
-obra/superpowers
-vercel/ai
-vercel/ai-elements
-vercel-labs/skills
-supercent-io/skills-template
-vercel/chat
+# Format: <source> <skill>
+github/awesome-copilot gh-cli
+github/awesome-copilot git-commit
+microsoft/playwright-cli playwright-cli
+mastra-ai/skills mastra
+sickn33/antigravity-awesome-skills docker-expert
+obra/superpowers brainstorming
+vercel/ai ai-sdk
+vercel/ai-elements ai-elements
+vercel-labs/skills find-skills
+vercel/chat chat-sdk

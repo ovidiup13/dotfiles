@@ -7,6 +7,7 @@ brew "opencode"
 brew "pnpm"
 brew "prettyping"
 brew "skills"
+brew "tailscale"
 brew "volta"
 brew "wakeonlan"
 
