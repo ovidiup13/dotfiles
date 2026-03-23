@@ -8,6 +8,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - requests `sudo` once and keeps the session alive while the install runs
 - installs platform prerequisites and packages
 - installs macOS agent skills listed in `packages/macos/skills.txt`
+- installs the latest Node.js LTS via `fnm` and the latest Go release via `goenv` on macOS
 - symlinks managed files from `home/` into `$HOME`
 - symlinks `home/.agents/.skill-lock.json` into `~/.agents/.skill-lock.json`
 - installs Oh My Zsh plus custom plugin repos on macOS, and keeps Ubuntu on a lighter Zsh setup
