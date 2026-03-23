@@ -5,6 +5,7 @@ set -euo pipefail
 REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 . "$REPO_ROOT/scripts/lib/common.sh"
+. "$REPO_ROOT/scripts/lib/sudo.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
 
 ensure_command_line_tools() {
@@ -118,6 +119,8 @@ main() {
     log_error ".macos can only run on macOS."
     exit 1
   fi
+
+  acquire_sudo
 
   case "$mode" in
     full)

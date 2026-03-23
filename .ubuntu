@@ -5,6 +5,7 @@ set -euo pipefail
 REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 . "$REPO_ROOT/scripts/lib/common.sh"
+. "$REPO_ROOT/scripts/lib/sudo.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
 
 require_apt() {
@@ -35,6 +36,7 @@ main() {
     exit 1
   fi
 
+  acquire_sudo
   require_apt
   export DEBIAN_FRONTEND=noninteractive
   install_apt_packages

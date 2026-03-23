@@ -3,9 +3,14 @@
 set -euo pipefail
 
 SUDO_KEEPALIVE_PID=''
+SUDO_TRAP_REGISTERED=''
 
 acquire_sudo() {
   if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+    return
+  fi
+
+  if [ -n "${DOTFILES_SUDO_ACTIVE:-}" ]; then
     return
   fi
 
@@ -23,12 +28,18 @@ acquire_sudo() {
     kill -0 "$$" >/dev/null 2>&1 || exit
   done 2>/dev/null &
   SUDO_KEEPALIVE_PID=$!
+  export DOTFILES_SUDO_ACTIVE=1
 
-  trap release_sudo EXIT INT TERM
+  if [ -z "$SUDO_TRAP_REGISTERED" ]; then
+    trap release_sudo EXIT INT TERM
+    SUDO_TRAP_REGISTERED=1
+  fi
 }
 
 release_sudo() {
   if [ -n "$SUDO_KEEPALIVE_PID" ] && kill -0 "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1; then
     kill "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1 || true
   fi
+
+  unset DOTFILES_SUDO_ACTIVE
 }
