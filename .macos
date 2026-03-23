@@ -49,14 +49,14 @@ load_homebrew_env() {
 
 install_brew_bundles() {
   log_step "Installing shared CLI packages"
-  brew bundle --file "$REPO_ROOT/packages/base/Brewfile" --no-lock
+  brew bundle --file "$REPO_ROOT/packages/base/Brewfile"
 
   log_step "Installing macOS packages"
-  brew bundle --file "$REPO_ROOT/packages/macos/Brewfile" --no-lock
+  brew bundle --file "$REPO_ROOT/packages/macos/Brewfile"
 
   if command_exists mas && mas account >/dev/null 2>&1; then
     log_step "Installing Mac App Store apps"
-    brew bundle --file "$REPO_ROOT/packages/macos/Brewfile.mas" --no-lock
+    brew bundle --file "$REPO_ROOT/packages/macos/Brewfile.mas"
   else
     log_warn "Skipping Mac App Store apps because mas is not signed in."
   fi
