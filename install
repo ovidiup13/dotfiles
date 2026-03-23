@@ -11,12 +11,33 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 main() {
   local platform
+  local mode="${1:-full}"
 
   ensure_not_root
   log_step "Preparing installer"
   acquire_sudo
 
   platform="$(detect_platform)"
+
+  case "$mode" in
+    full)
+      ;;
+    --skills)
+      if [ "$platform" != "macos" ]; then
+        log_error "Skills sync is currently supported only on macOS."
+        exit 1
+      fi
+
+      log_step "Syncing macOS agent skills"
+      "$REPO_ROOT/.macos" --post-link
+      log_success "Skills sync complete"
+      return
+      ;;
+    *)
+      log_error "Unknown install mode: $mode"
+      exit 1
+      ;;
+  esac
 
   case "$platform" in
     macos)

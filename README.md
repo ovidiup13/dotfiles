@@ -26,6 +26,14 @@ The bootstrap script installs the minimum prerequisites needed to clone the repo
 
 For unattended installs, set `DOTFILES_GIT_NAME` and `DOTFILES_GIT_EMAIL` before running the installer.
 
+To re-run only the macOS skills sync later, use:
+
+```sh
+./install --skills
+```
+
+The skills installer uses `skills add --yes -g --skill '*'` and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
+
 If you already cloned the repo, you can still run the local installer directly:
 
 ```sh
