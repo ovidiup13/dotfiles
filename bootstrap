@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/ovidiup13/dotfiles.git}"
+DOTFILES_REPO_DIR="${DOTFILES_REPO_DIR:-$HOME/.dotfiles}"
+DOTFILES_REPO_REF="${DOTFILES_REPO_REF:-master}"
+
+log_step() {
+  printf '\n==> %s\n' "$*"
+}
+
+log_info() {
+  printf '  - %s\n' "$*"
+}
+
+log_warn() {
+  printf '  ! %s\n' "$*"
+}
+
+log_error() {
+  printf '  x %s\n' "$*" >&2
+}
+
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+detect_platform() {
+  case "$(uname -s)" in
+    Darwin)
+      printf 'macos\n'
+      ;;
+    Linux)
+      if [ -r /etc/os-release ] && grep -E '^(ID|ID_LIKE)=' /etc/os-release | grep -Eq '(ubuntu|debian)'; then
+        printf 'ubuntu\n'
+      else
+        printf 'unknown\n'
+      fi
+      ;;
+    *)
+      printf 'unknown\n'
+      ;;
+  esac
+}
+
+acquire_sudo() {
+  if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+    return
+  fi
+
+  log_step "Requesting administrator access"
+  sudo -v
+
+  while true; do
+    sudo -n true
+    sleep 60
+    kill -0 "$$" >/dev/null 2>&1 || exit
+  done 2>/dev/null &
+
+  trap 'kill "$!" >/dev/null 2>&1 || true' EXIT INT TERM
+}
+
+ensure_macos_prereqs() {
+  if xcode-select -p >/dev/null 2>&1 && command_exists git; then
+    log_info "Xcode Command Line Tools already installed"
+    return
+  fi
+
+  log_step "Installing Xcode Command Line Tools"
+  xcode-select --install >/dev/null 2>&1 || true
+  log_info "Waiting for Command Line Tools installation to finish"
+
+  while ! xcode-select -p >/dev/null 2>&1 || ! command_exists git; do
+    sleep 20
+  done
+
+  log_info "Command Line Tools ready"
+}
+
+ensure_ubuntu_prereqs() {
+  log_step "Installing bootstrap prerequisites"
+  sudo apt-get update
+  sudo apt-get install -y ca-certificates curl git
+}
+
+clone_or_update_repo() {
+  if [ -d "$DOTFILES_REPO_DIR/.git" ]; then
+    log_step "Updating existing dotfiles repo"
+    git -C "$DOTFILES_REPO_DIR" fetch origin
+    git -C "$DOTFILES_REPO_DIR" checkout "$DOTFILES_REPO_REF"
+    git -C "$DOTFILES_REPO_DIR" pull --ff-only origin "$DOTFILES_REPO_REF"
+    return
+  fi
+
+  if [ -e "$DOTFILES_REPO_DIR" ]; then
+    log_error "$DOTFILES_REPO_DIR already exists and is not a git repository"
+    exit 1
+  fi
+
+  log_step "Cloning dotfiles repo into $DOTFILES_REPO_DIR"
+  git clone --branch "$DOTFILES_REPO_REF" "$DOTFILES_REPO_URL" "$DOTFILES_REPO_DIR"
+}
+
+run_installer() {
+  log_step "Handing off to dotfiles installer"
+  "$DOTFILES_REPO_DIR/install"
+}
+
+main() {
+  local platform
+
+  if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+    log_error "Run bootstrap as your normal user, not as root."
+    exit 1
+  fi
+
+  platform="$(detect_platform)"
+
+  case "$platform" in
+    macos|ubuntu)
+      ;;
+    *)
+      log_error "Unsupported platform. Bootstrap currently supports macOS and Ubuntu."
+      exit 1
+      ;;
+  esac
+
+  acquire_sudo
+
+  case "$platform" in
+    macos)
+      ensure_macos_prereqs
+      ;;
+    ubuntu)
+      ensure_ubuntu_prereqs
+      ;;
+  esac
+
+  clone_or_update_repo
+  run_installer
+}
+
+main "$@"

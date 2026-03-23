@@ -1,0 +1,43 @@
+[core]
+	editor = vim
+	excludesfile = ~/.gitignore
+	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+[include]
+	path = ~/.gitconfig.local
+[credential]
+	helper = cache --timeout=7200
+[pull]
+	rebase = true
+[push]
+	autoSetupRemote = true
+	default = current
+[diff]
+	tool = vimdiff
+[difftool]
+	prompt = false
+[diff "sopsdiffer"]
+	textconv = sops -d
+[alias]
+	a = add --all
+	b = branch
+	ba = branch -a
+	bc = rev-parse --abbrev-ref HEAD
+	c = commit
+	ca = commit -a
+	cam = commit -am
+	cm = commit -m
+	d = diff
+	dc = diff --cached
+	f = fetch
+	l = log --oneline
+	lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) %C(white)%s%C(reset) %C(dim white)- %an, %ar%C(reset)'
+	m = merge
+	o = switch
+	ob = switch -c
+	pl = pull
+	ps = push
+	psu = push -u
+	rb = rebase
+	s = status
+	sb = status --short --branch
+	w = show

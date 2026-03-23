@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+
+. "$REPO_ROOT/scripts/lib/common.sh"
+. "$REPO_ROOT/scripts/install/shell.sh"
+
+require_apt() {
+  if command_exists apt-get; then
+    return
+  fi
+
+  log_error "apt-get is required for Ubuntu installs."
+  exit 1
+}
+
+install_apt_packages() {
+  local package_file="$REPO_ROOT/packages/ubuntu/apt.txt"
+  local packages
+
+  packages=$(grep -v '^[[:space:]]*#' "$package_file" | tr '\n' ' ')
+
+  log_step "Updating apt package index"
+  sudo apt-get update
+
+  log_step "Installing Ubuntu packages"
+  sudo apt-get install -y $packages
+}
+
+main() {
+  if [ "$(detect_platform)" != "ubuntu" ]; then
+    log_error ".ubuntu can only run on Ubuntu-style systems."
+    exit 1
+  fi
+
+  require_apt
+  export DEBIAN_FRONTEND=noninteractive
+  install_apt_packages
+  verify_ubuntu_shell_prereqs
+}
+
+main "$@"

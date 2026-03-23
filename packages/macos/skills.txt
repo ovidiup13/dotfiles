@@ -1,0 +1,10 @@
+github/awesome-copilot
+microsoft/playwright-cli
+mastra-ai/skills
+sickn33/antigravity-awesome-skills
+obra/superpowers
+vercel/ai
+vercel/ai-elements
+vercel-labs/skills
+supercent-io/skills-template
+vercel/chat

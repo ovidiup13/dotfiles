@@ -1,0 +1,136 @@
+{
+  "version": 3,
+  "skills": {
+    "gh-cli": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/gh-cli/SKILL.md",
+      "skillFolderHash": "437437f7f20bcdbbdb3081cf164435a388c0a39a",
+      "installedAt": "2026-02-25T16:02:02.877Z",
+      "updatedAt": "2026-02-25T16:02:02.877Z"
+    },
+    "git-commit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/git-commit/SKILL.md",
+      "skillFolderHash": "883a6a7466f55a9cd9f22cf1cce2d9333fc9b998",
+      "installedAt": "2026-02-25T16:02:26.993Z",
+      "updatedAt": "2026-02-25T16:02:26.993Z"
+    },
+    "github-issues": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/github-issues/SKILL.md",
+      "skillFolderHash": "4dc94bd62efe7d80b4e33f09736be6a9733f307f",
+      "installedAt": "2026-02-25T16:02:53.222Z",
+      "updatedAt": "2026-02-25T16:02:53.222Z"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/microsoft/playwright-cli.git",
+      "skillPath": "skills/playwright-cli/SKILL.md",
+      "skillFolderHash": "a5a8823e403adc13b2488aae9968d6d92adbd2d7",
+      "installedAt": "2026-02-25T16:03:08.042Z",
+      "updatedAt": "2026-02-25T16:03:08.042Z"
+    },
+    "mastra": {
+      "source": "mastra-ai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mastra-ai/skills.git",
+      "skillPath": "skills/mastra/SKILL.md",
+      "skillFolderHash": "df577779bd8bf0a62cf55ece19681597efa5826c",
+      "installedAt": "2026-02-25T19:04:40.805Z",
+      "updatedAt": "2026-02-25T19:04:40.805Z"
+    },
+    "docker-expert": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/sickn33/antigravity-awesome-skills.git",
+      "skillPath": "skills/docker-expert/SKILL.md",
+      "skillFolderHash": "85e58e024d1059f0fd899741c08d21fcf94e8b34",
+      "installedAt": "2026-03-13T22:35:12.990Z",
+      "updatedAt": "2026-03-13T22:35:12.990Z"
+    },
+    "brainstorming": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/brainstorming/SKILL.md",
+      "skillFolderHash": "cb55eef29a446656b39f38ead06b4ea7232ab227",
+      "installedAt": "2026-03-13T22:38:25.353Z",
+      "updatedAt": "2026-03-13T22:38:25.353Z"
+    },
+    "ai-sdk": {
+      "source": "vercel/ai",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel/ai.git",
+      "skillPath": "skills/use-ai-sdk/SKILL.md",
+      "skillFolderHash": "d8e09e2796e2a04a9c7f7cc8c5bbab8da76a77d9",
+      "installedAt": "2026-03-13T23:33:12.399Z",
+      "updatedAt": "2026-03-13T23:33:12.399Z"
+    },
+    "ai-elements": {
+      "source": "vercel/ai-elements",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel/ai-elements.git",
+      "skillPath": "skills/ai-elements/SKILL.md",
+      "skillFolderHash": "9df70ad12070e1d131751a8a696a06a38b893976",
+      "installedAt": "2026-03-13T23:33:28.536Z",
+      "updatedAt": "2026-03-13T23:33:28.536Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "3013fdeb8a11b10b1eb795ec3ae8bfca38f7c26d",
+      "installedAt": "2026-03-15T15:03:36.437Z",
+      "updatedAt": "2026-03-15T15:03:36.437Z"
+    },
+    "security-best-practices": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/supercent-io/skills-template.git",
+      "skillPath": ".agent-skills/security-best-practices/SKILL.md",
+      "skillFolderHash": "355916565c001feeda735a54f8a78edfc103a33a",
+      "installedAt": "2026-03-15T15:04:08.147Z",
+      "updatedAt": "2026-03-15T15:04:08.147Z"
+    },
+    "create-agentsmd": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/create-agentsmd/SKILL.md",
+      "skillFolderHash": "290ab8ae85ba8695e9bceb674e74177e76f8633d",
+      "installedAt": "2026-03-15T15:04:24.505Z",
+      "updatedAt": "2026-03-15T15:04:24.505Z"
+    },
+    "chat-sdk": {
+      "source": "vercel/chat",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel/chat.git",
+      "skillPath": "skills/chat/SKILL.md",
+      "skillFolderHash": "5fc82890ceed6889899f478c71f943de3cab5afb",
+      "installedAt": "2026-03-19T18:01:31.333Z",
+      "updatedAt": "2026-03-19T18:01:31.333Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "cline",
+    "codex",
+    "cursor",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode",
+    "warp"
+  ]
+}

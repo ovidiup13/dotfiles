@@ -1,0 +1,9 @@
+set number
+set relativenumber
+set hidden
+set ignorecase
+set smartcase
+set expandtab
+set shiftwidth=2
+set tabstop=2
+set clipboard=unnamed

@@ -1,0 +1,10 @@
+# Look
+theme = nightfox
+font-family = JetBrains Mono, Hack Nerd Font, Fira Code
+font-size = 18
+window-padding-x = 20
+font-thicken = true
+cursor-style = block
+
+shell-integration-features = ssh-terminfo
+shell-integration-features = ssh-env

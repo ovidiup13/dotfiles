@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+
+. "$REPO_ROOT/scripts/lib/common.sh"
+. "$REPO_ROOT/scripts/install/shell.sh"
+
+ensure_command_line_tools() {
+  if xcode-select -p >/dev/null 2>&1; then
+    log_info "Xcode Command Line Tools already installed"
+    return
+  fi
+
+  log_step "Installing Xcode Command Line Tools"
+  xcode-select --install >/dev/null 2>&1 || true
+  log_warn "Finish the Command Line Tools prompt if macOS shows it, then rerun ./install if needed."
+}
+
+ensure_homebrew() {
+  if command_exists brew; then
+    return
+  fi
+
+  log_step "Installing Homebrew"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+}
+
+load_homebrew_env() {
+  if command_exists brew; then
+    eval "$(brew shellenv)"
+    return
+  fi
+
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    return
+  fi
+
+  if [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    return
+  fi
+
+  log_error "Homebrew is required but was not found after installation."
+  exit 1
+}
+
+install_brew_bundles() {
+  log_step "Installing shared CLI packages"
+  brew bundle --file "$REPO_ROOT/packages/base/Brewfile" --no-lock
+
+  log_step "Installing macOS packages"
+  brew bundle --file "$REPO_ROOT/packages/macos/Brewfile" --no-lock
+
+  if command_exists mas && mas account >/dev/null 2>&1; then
+    log_step "Installing Mac App Store apps"
+    brew bundle --file "$REPO_ROOT/packages/macos/Brewfile.mas" --no-lock
+  else
+    log_warn "Skipping Mac App Store apps because mas is not signed in."
+  fi
+}
+
+install_skills() {
+  local skills_file="$REPO_ROOT/packages/macos/skills.txt"
+  local source
+
+  if ! command_exists skills; then
+    log_error "skills CLI was not found after Homebrew installation."
+    exit 1
+  fi
+
+  if [ ! -f "$skills_file" ]; then
+    log_error "Skills manifest not found: $skills_file"
+    exit 1
+  fi
+
+  log_step "Installing agent skills"
+  while IFS= read -r source; do
+    if [ -z "$source" ] || [[ "$source" == \#* ]]; then
+      continue
+    fi
+
+    log_info "skills add $source"
+    skills add "$source"
+  done < "$skills_file"
+}
+
+verify_skills_manifest() {
+  local skills_file="$REPO_ROOT/packages/macos/skills.txt"
+  local lock_file="$HOME/.agents/.skill-lock.json"
+  local manifest_sources lock_sources
+
+  if ! command_exists jq; then
+    log_warn "Skipping skill manifest verification because jq is not installed."
+    return
+  fi
+
+  if [ ! -f "$lock_file" ]; then
+    log_warn "Skipping skill manifest verification because $lock_file was not found."
+    return
+  fi
+
+  manifest_sources="$(grep -Ev '^[[:space:]]*(#|$)' "$skills_file" | sort -u)"
+  lock_sources="$(jq -r '.skills | to_entries[] | .value.source' "$lock_file" | sort -u)"
+
+  if [ "$manifest_sources" != "$lock_sources" ]; then
+    log_error "packages/macos/skills.txt does not match the sources in $lock_file"
+    exit 1
+  fi
+}
+
+main() {
+  local mode="${1:-full}"
+
+  if [ "$(detect_platform)" != "macos" ]; then
+    log_error ".macos can only run on macOS."
+    exit 1
+  fi
+
+  case "$mode" in
+    full)
+      ensure_command_line_tools
+      ensure_homebrew
+      load_homebrew_env
+      install_brew_bundles
+      install_macos_oh_my_zsh
+      ;;
+    --post-link)
+      load_homebrew_env
+      verify_skills_manifest
+      install_skills
+      ;;
+    *)
+      log_error "Unknown .macos mode: $mode"
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

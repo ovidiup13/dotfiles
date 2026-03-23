@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+
+. "$REPO_ROOT/scripts/lib/common.sh"
+. "$REPO_ROOT/scripts/install/git.sh"
+. "$REPO_ROOT/scripts/lib/sudo.sh"
+. "$REPO_ROOT/scripts/lib/symlink.sh"
+
+main() {
+  local platform
+
+  ensure_not_root
+  log_step "Preparing installer"
+  acquire_sudo
+
+  platform="$(detect_platform)"
+
+  case "$platform" in
+    macos)
+      log_step "Running macOS setup"
+      "$REPO_ROOT/.macos"
+      ;;
+    ubuntu)
+      log_step "Running Ubuntu setup"
+      "$REPO_ROOT/.ubuntu"
+      ;;
+    *)
+      log_error "Unsupported platform. This installer currently supports macOS and Ubuntu."
+      exit 1
+      ;;
+  esac
+
+  log_step "Linking managed dotfiles into $HOME"
+  link_home_tree "$REPO_ROOT"
+
+  configure_git_identity
+
+  if [ "$platform" = "macos" ]; then
+    log_step "Syncing macOS agent skills"
+    "$REPO_ROOT/.macos" --post-link
+  fi
+
+  log_success "Install complete"
+  log_info "Open a new shell session to pick up all changes."
+}
+
+main "$@"
