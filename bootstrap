@@ -4,7 +4,7 @@ set -euo pipefail
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/ovidiup13/dotfiles.git}"
 DOTFILES_REPO_DIR="${DOTFILES_REPO_DIR:-$HOME/.dotfiles}"
-DOTFILES_REPO_REF="${DOTFILES_REPO_REF:-master}"
+DOTFILES_REPO_REF="${DOTFILES_REPO_REF:-main}"
 
 log_step() {
   printf '\n==> %s\n' "$*"

@@ -19,7 +19,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 Fresh machine bootstrap:
 
 ```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/ovidiup13/dotfiles/master/bootstrap)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ovidiup13/dotfiles/main/bootstrap)"
 ```
 
 The bootstrap script installs the minimum prerequisites needed to clone the repo into `~/.dotfiles`, then hands off to `~/.dotfiles/install`.
