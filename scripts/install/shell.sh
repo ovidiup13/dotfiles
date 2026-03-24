@@ -67,17 +67,6 @@ set_ubuntu_default_shell() {
 }
 
 install_ubuntu_starship() {
-  if load_homebrew_env; then
-    if brew list --formula starship >/dev/null 2>&1; then
-      log_info "Starship already installed with Homebrew"
-      return
-    fi
-
-    log_step "Installing starship with Homebrew"
-    brew install starship
-    return
-  fi
-
   if dpkg -s starship >/dev/null 2>&1; then
     log_info "Starship already installed with apt"
     return
