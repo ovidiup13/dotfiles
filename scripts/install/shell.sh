@@ -67,11 +67,11 @@ set_ubuntu_default_shell() {
 }
 
 install_ubuntu_starship() {
-  if dpkg -s starship >/dev/null 2>&1; then
-    log_info "Starship already installed with apt"
+  if command_exists starship; then
+    log_info "Starship already installed"
     return
   fi
 
-  log_step "Installing starship with apt"
-  sudo apt-get install -y starship
+  log_step "Installing starship"
+  curl -sS https://starship.rs/install.sh | sh -s -- -y
 }
