@@ -48,3 +48,20 @@ verify_ubuntu_shell_prereqs() {
     exit 1
   fi
 }
+
+set_ubuntu_default_shell() {
+  local zsh_path current_shell user_name
+
+  zsh_path="$(command -v zsh)"
+  user_name="${SUDO_USER:-$(id -un)}"
+  current_shell="$(getent passwd "$user_name" | cut -d: -f7)"
+
+  if [ "$current_shell" = "$zsh_path" ]; then
+    log_info "Default shell already set to zsh"
+    return
+  fi
+
+  log_step "Setting default shell to zsh"
+  sudo chsh -s "$zsh_path" "$user_name"
+  log_success "Default shell updated for $user_name"
+}

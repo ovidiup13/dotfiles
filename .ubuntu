@@ -43,6 +43,7 @@ main() {
   install_apt_packages
   install_ubuntu_tailscale
   verify_ubuntu_shell_prereqs
+  set_ubuntu_default_shell
 }
 
 main "$@"
