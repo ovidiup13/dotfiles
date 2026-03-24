@@ -8,7 +8,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - requests `sudo` once and keeps the session alive while the install runs
 - installs platform prerequisites and packages
 - installs macOS agent skills listed in `packages/macos/skills.txt`
-- installs Tailscale on macOS and Ubuntu, then leaves login/auth to a manual `sudo tailscale up`
+- installs Tailscale on macOS from the official standalone package and on Ubuntu via the upstream install script
 - installs the latest Node.js LTS via `fnm` and the latest Go release via `goenv` on macOS
 - applies selected macOS defaults during the macOS install flow
 - symlinks managed files from `home/` into `$HOME`

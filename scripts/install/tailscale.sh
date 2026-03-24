@@ -2,33 +2,48 @@
 
 set -euo pipefail
 
+resolve_macos_tailscale_pkg_url() {
+  local pkg_path
+
+  pkg_path="$({ curl -fsSL https://pkgs.tailscale.com/stable/#macos || return 1; } | grep -o 'Tailscale-[0-9.]*-macos\.pkg' | sed -n '1p')"
+
+  if [ -z "$pkg_path" ]; then
+    return 1
+  fi
+
+  printf 'https://pkgs.tailscale.com/stable/%s\n' "$pkg_path"
+}
+
 install_macos_tailscale() {
-  if ! command_exists brew; then
-    log_error "Homebrew is required for the macOS Tailscale install."
-    exit 1
-  fi
+  local pkg_url tmp_pkg
 
-  if ! brew list --formula tailscale >/dev/null 2>&1; then
-    log_warn "Skipping Tailscale startup because the Homebrew formula is not installed yet."
-    return
-  fi
-
-  if command_exists tailscale; then
+  if [ -d /Applications/Tailscale.app ]; then
     log_info "Tailscale already installed on macOS"
   else
-    log_warn "Skipping Tailscale startup because the tailscale command is not available yet."
-    return
+    pkg_url="$(resolve_macos_tailscale_pkg_url)"
+
+    if [ -z "$pkg_url" ]; then
+      log_error "Could not resolve the latest macOS Tailscale package URL."
+      exit 1
+    fi
+
+    tmp_pkg="$(mktemp -t tailscale-installer).pkg"
+
+    log_step "Installing Tailscale on macOS"
+    curl -fsSL "$pkg_url" -o "$tmp_pkg"
+    sudo installer -pkg "$tmp_pkg" -target / >/dev/null
+    rm -f "$tmp_pkg"
   fi
 
-  if pgrep -x tailscaled >/dev/null 2>&1; then
+  if pgrep -x Tailscale >/dev/null 2>&1; then
     log_info "Tailscale already running on macOS"
     log_info "Use 'tailscale status' to verify the current session"
     return
   fi
 
   log_step "Starting Tailscale on macOS"
-  sudo brew services start tailscale >/dev/null
-  log_info "Finish setup with: sudo tailscale up"
+  open -a Tailscale >/dev/null 2>&1 || true
+  log_info "Finish setup in the Tailscale app or with: sudo tailscale up"
 }
 
 install_ubuntu_tailscale() {
