@@ -65,3 +65,24 @@ set_ubuntu_default_shell() {
   sudo chsh -s "$zsh_path" "$user_name"
   log_success "Default shell updated for $user_name"
 }
+
+install_ubuntu_starship() {
+  if load_homebrew_env; then
+    if brew list --formula starship >/dev/null 2>&1; then
+      log_info "Starship already installed with Homebrew"
+      return
+    fi
+
+    log_step "Installing starship with Homebrew"
+    brew install starship
+    return
+  fi
+
+  if dpkg -s starship >/dev/null 2>&1; then
+    log_info "Starship already installed with apt"
+    return
+  fi
+
+  log_step "Installing starship with apt"
+  sudo apt-get install -y starship
+}

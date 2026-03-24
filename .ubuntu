@@ -6,6 +6,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 . "$REPO_ROOT/scripts/lib/common.sh"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
+. "$REPO_ROOT/scripts/install/homebrew.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
 . "$REPO_ROOT/scripts/install/tailscale.sh"
 
@@ -43,6 +44,7 @@ main() {
   install_apt_packages
   install_ubuntu_tailscale
   verify_ubuntu_shell_prereqs
+  install_ubuntu_starship
   set_ubuntu_default_shell
 }
 

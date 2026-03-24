@@ -6,6 +6,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 . "$REPO_ROOT/scripts/lib/common.sh"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
+. "$REPO_ROOT/scripts/install/homebrew.sh"
 . "$REPO_ROOT/scripts/install/runtimes.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
 . "$REPO_ROOT/scripts/install/tailscale.sh"
@@ -19,35 +20,6 @@ ensure_command_line_tools() {
   log_step "Installing Xcode Command Line Tools"
   xcode-select --install >/dev/null 2>&1 || true
   log_warn "Finish the Command Line Tools prompt if macOS shows it, then rerun ./install if needed."
-}
-
-ensure_homebrew() {
-  if command_exists brew; then
-    return
-  fi
-
-  log_step "Installing Homebrew"
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-}
-
-load_homebrew_env() {
-  if command_exists brew; then
-    eval "$(brew shellenv)"
-    return
-  fi
-
-  if [ -x /opt/homebrew/bin/brew ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    return
-  fi
-
-  if [ -x /usr/local/bin/brew ]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-    return
-  fi
-
-  log_error "Homebrew is required but was not found after installation."
-  exit 1
 }
 
 mas_is_ready() {
@@ -175,7 +147,10 @@ main() {
     full)
       ensure_command_line_tools
       ensure_homebrew
-      load_homebrew_env
+      if ! load_homebrew_env; then
+        log_error "Homebrew is required but was not found after installation."
+        exit 1
+      fi
       install_brew_bundles
       install_macos_tailscale
       install_macos_runtimes
@@ -183,7 +158,10 @@ main() {
       ensure_github_ssh_key
       ;;
     --post-link)
-      load_homebrew_env
+      if ! load_homebrew_env; then
+        log_error "Homebrew is required but was not found after installation."
+        exit 1
+      fi
       "$REPO_ROOT/scripts/install/skills.sh"
       ;;
     *)

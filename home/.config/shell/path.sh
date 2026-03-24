@@ -29,8 +29,20 @@ do
   fi
 done
 
+BREW_BIN=''
+
 if command -v brew >/dev/null 2>&1; then
-  BREW_PREFIX="$(brew --prefix)"
+  BREW_BIN="$(command -v brew)"
+elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+  BREW_BIN=/home/linuxbrew/.linuxbrew/bin/brew
+elif [ -x /opt/homebrew/bin/brew ]; then
+  BREW_BIN=/opt/homebrew/bin/brew
+elif [ -x /usr/local/bin/brew ]; then
+  BREW_BIN=/usr/local/bin/brew
+fi
+
+if [ -n "$BREW_BIN" ]; then
+  BREW_PREFIX="$($BREW_BIN --prefix)"
   for dir in "$BREW_PREFIX/bin" "$BREW_PREFIX/sbin"; do
     if [ -d "$dir" ]; then
       path_prepend "$dir"
