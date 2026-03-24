@@ -1,5 +1,4 @@
 brew "diff-so-fancy"
-brew "duti"
 brew "fnm"
 brew "goenv"
 brew "jenv"

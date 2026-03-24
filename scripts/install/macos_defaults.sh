@@ -3,8 +3,17 @@
 set -euo pipefail
 
 set_macos_default_browser() {
-  if ! command_exists duti; then
-    log_warn "Skipping default browser setup because duti is not installed."
+  local script_path
+
+  if ! command_exists swift; then
+    log_warn "Skipping default browser setup because swift is not installed."
+    return
+  fi
+
+  script_path="$REPO_ROOT/scripts/install/set_default_browser.swift"
+
+  if [ ! -f "$script_path" ]; then
+    log_warn "Skipping default browser setup because $script_path was not found."
     return
   fi
 
@@ -14,8 +23,9 @@ set_macos_default_browser() {
   fi
 
   log_info "Setting Firefox as the default browser"
-  duti -s org.mozilla.firefox http all
-  duti -s org.mozilla.firefox https all
+  if ! swift "$script_path" org.mozilla.firefox; then
+    log_warn "Skipping default browser setup because Launch Services rejected the update."
+  fi
 }
 
 apply_macos_power_settings() {
