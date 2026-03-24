@@ -50,6 +50,61 @@ load_homebrew_env() {
   exit 1
 }
 
+mas_is_ready() {
+  if ! command_exists mas; then
+    return 1
+  fi
+
+  MAS_NO_AUTO_INDEX=1 mas list >/dev/null 2>&1
+}
+
+install_mas_apps() {
+  local brewfile_mas="$REPO_ROOT/packages/macos/Brewfile.mas"
+  local tmp_dir desired_ids_file installed_ids_file missing_ids_file
+  local app_id
+  local -a install_ids=()
+
+  if [ ! -f "$brewfile_mas" ]; then
+    log_warn "Skipping Mac App Store apps because $brewfile_mas was not found."
+    return
+  fi
+
+  if ! mas_is_ready; then
+    log_warn "Skipping Mac App Store apps because mas is unavailable or App Store access could not be verified."
+    return
+  fi
+
+  tmp_dir="$(mktemp -d)"
+
+  desired_ids_file="$tmp_dir/desired-mas-ids.txt"
+  installed_ids_file="$tmp_dir/installed-mas-ids.txt"
+  missing_ids_file="$tmp_dir/missing-mas-ids.txt"
+
+  grep '^mas ' "$brewfile_mas" | sed -E 's/.*id:[[:space:]]*([0-9]+).*/\1/' | sort -u > "$desired_ids_file"
+  MAS_NO_AUTO_INDEX=1 mas list | awk '{print $1}' | sort -u > "$installed_ids_file"
+  comm -23 "$desired_ids_file" "$installed_ids_file" > "$missing_ids_file"
+
+  if [ ! -s "$missing_ids_file" ]; then
+    rm -rf "$tmp_dir"
+    log_info "Mac App Store apps already match $brewfile_mas"
+    return
+  fi
+
+  while IFS= read -r app_id; do
+    [ -n "$app_id" ] && install_ids+=("$app_id")
+  done < "$missing_ids_file"
+
+  if [ "${#install_ids[@]}" -eq 0 ]; then
+    rm -rf "$tmp_dir"
+    log_info "Mac App Store apps already match $brewfile_mas"
+    return
+  fi
+
+  log_step "Installing Mac App Store apps"
+  sudo env MAS_NO_AUTO_INDEX=1 mas install "${install_ids[@]}"
+  rm -rf "$tmp_dir"
+}
+
 install_brew_bundles() {
   log_step "Installing shared CLI packages"
   brew bundle --file "$REPO_ROOT/packages/base/Brewfile"
@@ -57,12 +112,7 @@ install_brew_bundles() {
   log_step "Installing macOS packages"
   brew bundle --file "$REPO_ROOT/packages/macos/Brewfile"
 
-  if command_exists mas && mas account >/dev/null 2>&1; then
-    log_step "Installing Mac App Store apps"
-    brew bundle --file "$REPO_ROOT/packages/macos/Brewfile.mas"
-  else
-    log_warn "Skipping Mac App Store apps because mas is not signed in."
-  fi
+  install_mas_apps
 }
 
 main() {
