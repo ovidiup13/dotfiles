@@ -33,6 +33,17 @@ main() {
       log_success "Skills sync complete"
       return
       ;;
+    --macos-defaults)
+      if [ "$platform" != "macos" ]; then
+        log_error "macOS defaults sync is currently supported only on macOS."
+        exit 1
+      fi
+
+      log_step "Applying macOS defaults"
+      "$REPO_ROOT/.macos" --defaults
+      log_success "macOS defaults applied"
+      return
+      ;;
     *)
       log_error "Unknown install mode: $mode"
       exit 1

@@ -10,6 +10,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - installs macOS agent skills listed in `packages/macos/skills.txt`
 - installs Tailscale on macOS and Ubuntu, then leaves login/auth to a manual `sudo tailscale up`
 - installs the latest Node.js LTS via `fnm` and the latest Go release via `goenv` on macOS
+- applies selected macOS defaults during the macOS install flow
 - symlinks managed files from `home/` into `$HOME`
 - installs Oh My Zsh plus custom plugin repos on macOS, and keeps Ubuntu on a lighter Zsh setup
 - prompts for Git name/email and writes them to `~/.gitconfig.local`
@@ -33,6 +34,12 @@ To re-run only the macOS skills sync later, use:
 ./install --skills
 ```
 
+To re-apply only the macOS defaults later, use:
+
+```sh
+./install --macos-defaults
+```
+
 The skills installer reads `packages/macos/skills.txt` as `<source> <skill>`, installs only those exact skills, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
 
 If you already cloned the repo, you can still run the local installer directly:
@@ -47,6 +54,7 @@ cd ~/.dotfiles
 
 - `install` is the main entrypoint
 - `.macos` handles macOS prerequisites and Homebrew installs
+- `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
 - `packages/macos/skills.txt` lists exact Skills CLI installs as `<source> <skill>` on macOS
 - `.ubuntu` handles Ubuntu prerequisites and apt installs
 - `home/` contains the files that get symlinked into `$HOME`
@@ -57,6 +65,7 @@ cd ~/.dotfiles
 - validate edited shell scripts with `bash -n path/to/script`
 - common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .ubuntu`, `bash -n scripts/install/skills.sh`
 - rerun only the skills flow with `./install --skills`
+- rerun only the macOS defaults flow with `./install --macos-defaults`
 - smoke test the macOS post-link stage with `./.macos --post-link`
 - smoke test the Ubuntu path with `./.ubuntu`
 - keep `packages/macos/skills.txt` entries to one exact `<source> <skill>` mapping per line
