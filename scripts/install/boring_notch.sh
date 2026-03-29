@@ -14,6 +14,11 @@ clear_boring_notch_quarantine() {
     return
   fi
 
+  if ! xattr -p com.apple.quarantine "$app_path" >/dev/null 2>&1; then
+    log_info "Boring Notch already allowed outside Gatekeeper"
+    return
+  fi
+
   log_info "Allowing Boring Notch to launch outside Gatekeeper"
   sudo xattr -dr com.apple.quarantine "$app_path" >/dev/null 2>&1 || true
 }

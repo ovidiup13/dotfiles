@@ -17,9 +17,21 @@ resolve_macos_tailscale_pkg_url() {
 install_macos_tailscale_launcher() {
   local launcher_path="/usr/local/bin/tailscale"
   local executable_path="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+  local expected_launcher
 
   if [ ! -x "$executable_path" ]; then
     log_warn "Skipping Tailscale CLI launcher because $executable_path was not found."
+    return
+  fi
+
+  expected_launcher=$(cat <<EOF
+#!/bin/sh
+exec "$executable_path" "\$@"
+EOF
+)
+
+  if [ -f "$launcher_path" ] && [ "$(cat "$launcher_path")" = "$expected_launcher" ]; then
+    log_info "Tailscale CLI launcher already installed"
     return
   fi
 
