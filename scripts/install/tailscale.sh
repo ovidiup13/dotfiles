@@ -14,6 +14,24 @@ resolve_macos_tailscale_pkg_url() {
   printf 'https://pkgs.tailscale.com/stable/%s\n' "$pkg_path"
 }
 
+install_macos_tailscale_launcher() {
+  local launcher_path="/usr/local/bin/tailscale"
+  local executable_path="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+
+  if [ ! -x "$executable_path" ]; then
+    log_warn "Skipping Tailscale CLI launcher because $executable_path was not found."
+    return
+  fi
+
+  log_info "Installing Tailscale CLI launcher"
+  sudo mkdir -p /usr/local/bin
+  sudo tee "$launcher_path" >/dev/null <<EOF
+#!/bin/sh
+exec "$executable_path" "\$@"
+EOF
+  sudo chmod +x "$launcher_path"
+}
+
 install_macos_tailscale() {
   local pkg_url tmp_pkg
 
@@ -34,6 +52,8 @@ install_macos_tailscale() {
     sudo installer -pkg "$tmp_pkg" -target / >/dev/null
     rm -f "$tmp_pkg"
   fi
+
+  install_macos_tailscale_launcher
 
   if pgrep -x Tailscale >/dev/null 2>&1; then
     log_info "Tailscale already running on macOS"
