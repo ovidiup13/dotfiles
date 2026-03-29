@@ -6,6 +6,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 . "$REPO_ROOT/scripts/lib/common.sh"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
+. "$REPO_ROOT/scripts/install/boring_notch.sh"
 . "$REPO_ROOT/scripts/install/homebrew.sh"
 . "$REPO_ROOT/scripts/install/macos_defaults.sh"
 . "$REPO_ROOT/scripts/install/runtimes.sh"
@@ -153,6 +154,7 @@ main() {
         exit 1
       fi
       install_brew_bundles
+      install_macos_boring_notch
       install_macos_tailscale
       install_macos_runtimes
       install_macos_oh_my_zsh
