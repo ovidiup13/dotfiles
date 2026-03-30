@@ -97,6 +97,9 @@ write_macos_default() {
 
 set_macos_default_browser() {
   local script_path
+  local firefox_bundle_id
+
+  firefox_bundle_id="org.mozilla.firefox"
 
   if ! command_exists swift; then
     log_warn "Skipping default browser setup because swift is not installed."
@@ -115,8 +118,12 @@ set_macos_default_browser() {
     return
   fi
 
+  if swift "$script_path" --is-default "$firefox_bundle_id"; then
+    return
+  fi
+
   log_info "Setting Firefox as the default browser"
-  if ! swift "$script_path" org.mozilla.firefox; then
+  if ! swift "$script_path" "$firefox_bundle_id"; then
     log_warn "Skipping default browser setup because Launch Services rejected the update."
   fi
 }
