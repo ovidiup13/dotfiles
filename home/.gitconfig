@@ -6,6 +6,10 @@
 	path = ~/.gitconfig.local
 [credential]
 	helper = cache --timeout=7200
+[user]
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOm+khIsLA1Zb87FnsFA2Akk0+mfSoXJ61rEhiwEbGqn
+[gpg]
+	format = ssh
 [pull]
 	rebase = true
 [push]
