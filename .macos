@@ -9,6 +9,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 . "$REPO_ROOT/scripts/install/boring_notch.sh"
 . "$REPO_ROOT/scripts/install/homebrew.sh"
 . "$REPO_ROOT/scripts/install/macos_defaults.sh"
+. "$REPO_ROOT/scripts/install/oh_my_opencode.sh"
 . "$REPO_ROOT/scripts/install/ollama.sh"
 . "$REPO_ROOT/scripts/install/runtimes.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
@@ -193,6 +194,7 @@ main() {
         exit 1
       fi
       "$REPO_ROOT/scripts/install/skills.sh"
+      install_macos_oh_my_opencode
       ;;
     --defaults)
       apply_macos_defaults

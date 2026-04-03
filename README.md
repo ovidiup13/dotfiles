@@ -8,6 +8,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - requests `sudo` once and keeps the session alive while the install runs
 - installs platform prerequisites and packages
 - installs macOS agent skills listed in `packages/macos/skills.txt`
+- installs Oh My OpenCode during the macOS post-link flow and verifies it with `doctor`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
 - installs the latest Node.js LTS via `fnm` and the latest Go release via `goenv` on macOS
 - applies selected macOS defaults during the macOS install flow
@@ -28,7 +29,7 @@ The bootstrap script installs the minimum prerequisites needed to clone the repo
 
 For unattended installs, set `DOTFILES_GIT_NAME` and `DOTFILES_GIT_EMAIL` before running the installer.
 
-To re-run only the macOS skills sync later, use:
+To re-run the macOS post-link tasks later, use:
 
 ```sh
 ./install --skills
@@ -40,7 +41,9 @@ To re-apply only the macOS defaults later, use:
 ./install --macos-defaults
 ```
 
-The skills installer reads `packages/macos/skills.txt` as `<source> <skill>`, installs only those exact skills, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
+The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
+
+The macOS post-link flow also installs Oh My OpenCode with `npx --yes oh-my-opencode install --no-tui`. It defaults to `DOTFILES_OMO_OPENAI=yes` to match the checked-in OpenCode agent config, and you can override provider flags with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, and `DOTFILES_OMO_OPENCODE_GO`.
 
 If you already cloned the repo, you can still run the local installer directly:
 
@@ -55,6 +58,7 @@ cd ~/.dotfiles
 - `install` is the main entrypoint
 - `.macos` handles macOS prerequisites and Homebrew installs
 - `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
+- `scripts/install/oh_my_opencode.sh` installs and verifies Oh My OpenCode during the macOS post-link stage
 - `packages/macos/skills.txt` lists exact Skills CLI installs as `<source> <skill>` on macOS
 - `.ubuntu` handles Ubuntu prerequisites and apt installs
 - `home/` contains the files that get symlinked into `$HOME`
@@ -63,8 +67,8 @@ cd ~/.dotfiles
 ## Development Notes
 
 - validate edited shell scripts with `bash -n path/to/script`
-- common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .ubuntu`, `bash -n scripts/install/skills.sh`
-- rerun only the skills flow with `./install --skills`
+- common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .ubuntu`, `bash -n scripts/install/oh_my_opencode.sh`, `bash -n scripts/install/skills.sh`
+- rerun the macOS post-link flow with `./install --skills`
 - rerun only the macOS defaults flow with `./install --macos-defaults`
 - smoke test the macOS post-link stage with `./.macos --post-link`
 - smoke test the Ubuntu path with `./.ubuntu`
