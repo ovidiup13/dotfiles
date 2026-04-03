@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+
+. "$REPO_ROOT/scripts/lib/common.sh"
+. "$REPO_ROOT/scripts/lib/sudo.sh"
+. "$REPO_ROOT/scripts/install/homebrew.sh"
+. "$REPO_ROOT/scripts/install/macos_common.sh"
+. "$REPO_ROOT/scripts/install/runtimes.sh"
+. "$REPO_ROOT/scripts/install/shell.sh"
+
+install_remote_brew_bundles() {
+  log_step "Applying Brewfile: $REPO_ROOT/packages/base/Brewfile"
+  brew bundle --file "$REPO_ROOT/packages/base/Brewfile"
+
+  log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile.remote"
+  brew bundle --file "$REPO_ROOT/packages/macos/Brewfile.remote"
+}
+
+main() {
+  local arg
+
+  while [ "$#" -gt 0 ]; do
+    arg="$1"
+
+    case "$arg" in
+      full)
+        ;;
+      *)
+        log_error "Unknown .macos-remote argument: $arg"
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
+
+  if [ "$(detect_platform)" != "macos" ]; then
+    log_error ".macos-remote can only run on macOS."
+    exit 1
+  fi
+
+  acquire_sudo
+
+  ensure_command_line_tools
+  ensure_homebrew
+  if ! load_homebrew_env; then
+    log_error "Homebrew is required but was not found after installation."
+    exit 1
+  fi
+
+  install_remote_brew_bundles
+  install_macos_runtimes
+  install_macos_oh_my_zsh
+  ensure_github_ssh_key
+}
+
+main "$@"

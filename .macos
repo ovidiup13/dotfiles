@@ -8,23 +8,13 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
 . "$REPO_ROOT/scripts/install/boring_notch.sh"
 . "$REPO_ROOT/scripts/install/homebrew.sh"
+. "$REPO_ROOT/scripts/install/macos_common.sh"
 . "$REPO_ROOT/scripts/install/macos_defaults.sh"
 . "$REPO_ROOT/scripts/install/oh_my_opencode.sh"
 . "$REPO_ROOT/scripts/install/ollama.sh"
 . "$REPO_ROOT/scripts/install/runtimes.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
 . "$REPO_ROOT/scripts/install/tailscale.sh"
-
-ensure_command_line_tools() {
-  if xcode-select -p >/dev/null 2>&1; then
-    log_info "Xcode Command Line Tools already installed"
-    return
-  fi
-
-  log_step "Installing Xcode Command Line Tools"
-  xcode-select --install >/dev/null 2>&1 || true
-  log_warn "Finish the Command Line Tools prompt if macOS shows it, then rerun ./install if needed."
-}
 
 mas_is_ready() {
   if ! command_exists mas; then
@@ -81,60 +71,38 @@ install_mas_apps() {
   rm -rf "$tmp_dir"
 }
 
-ensure_github_ssh_key() {
-  local ssh_dir="$HOME/.ssh"
-  local key_path="$ssh_dir/github"
-  local config_file="$ssh_dir/config"
-  local comment
-
-  if ! command_exists ssh-keygen; then
-    log_error "ssh-keygen is required to generate the GitHub SSH key."
-    exit 1
-  fi
-
-  mkdir -p "$ssh_dir"
-  chmod 700 "$ssh_dir"
-
-  if [ -f "$key_path" ]; then
-    log_info "GitHub SSH key already exists at $key_path"
-    return
-  fi
-
-  comment="${DOTFILES_GIT_EMAIL:-$(git config --global user.email 2>/dev/null || true)}"
-  if [ -z "$comment" ]; then
-    comment="github"
-  fi
-
-  log_step "Generating GitHub SSH key"
-  ssh-keygen -t ed25519 -C "$comment" -f "$key_path" -N ""
-
-  touch "$config_file"
-  chmod 600 "$config_file"
-
-  if ! grep -q 'IdentityFile ~/.ssh/github' "$config_file"; then
-    cat >> "$config_file" <<'EOF'
-Host github.com
-  AddKeysToAgent yes
-  UseKeychain yes
-  IdentityFile ~/.ssh/github
-EOF
-  fi
-
-  if command_exists ssh-add; then
-    ssh-add --apple-use-keychain "$key_path" >/dev/null 2>&1 || ssh-add "$key_path" >/dev/null 2>&1 || true
-  fi
-
-  log_info "Copy the public key with: pbcopy < $key_path.pub"
-}
-
 install_brew_bundles() {
-  log_step "Installing shared CLI packages"
+  log_step "Applying Brewfile: $REPO_ROOT/packages/base/Brewfile"
   brew bundle --file "$REPO_ROOT/packages/base/Brewfile"
 
-  log_step "Installing macOS packages"
+  log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile"
   brew bundle --file "$REPO_ROOT/packages/macos/Brewfile"
 
+  log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile.mas"
   install_mas_apps
+}
+
+validate_macos_profile() {
+  local profile="$1"
+
+  case "$profile" in
+    remote|main)
+      ;;
+    *)
+      log_error "Invalid macOS profile: $profile. Expected remote or main."
+      exit 1
+      ;;
+  esac
+}
+
+validate_macos_mode_profile() {
+  local mode="$1"
+  local profile="$2"
+
+  if [ "$mode" = "--defaults" ] && [ "$profile" = "remote" ]; then
+    log_error "--defaults only supports the main macOS profile."
+    exit 1
+  fi
 }
 
 configure_sudo_touch_id() {
@@ -160,8 +128,76 @@ configure_sudo_touch_id() {
   sudo perl -0pi -e 's/^#([[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so\h*)$/$1/m' /etc/pam.d/sudo_local
 }
 
+run_macos_full_shared_setup() {
+  ensure_command_line_tools
+  ensure_homebrew
+  if ! load_homebrew_env; then
+    log_error "Homebrew is required but was not found after installation."
+    exit 1
+  fi
+
+  install_brew_bundles
+}
+
+run_macos_full_shared_runtime_shell() {
+  install_macos_tailscale
+  install_macos_ollama
+  install_macos_runtimes
+  install_macos_oh_my_zsh
+}
+
+run_macos_full_shared_finalize() {
+  ensure_github_ssh_key
+}
+
+run_macos_full_main_only_pre_runtime_shell() {
+  install_macos_boring_notch
+}
+
+run_macos_full_main_only_finalize() {
+  configure_sudo_touch_id
+  apply_macos_defaults
+}
+
 main() {
-  local mode="${1:-full}"
+  local arg
+  local mode="full"
+  local mode_set=0
+  local macos_profile="main"
+
+  while [ "$#" -gt 0 ]; do
+    arg="$1"
+
+    case "$arg" in
+      full|--post-link|--defaults)
+        if [ "$mode_set" -eq 1 ]; then
+          log_error "Only one .macos mode can be selected: full, --post-link, or --defaults."
+          exit 1
+        fi
+
+        mode="$arg"
+        mode_set=1
+        ;;
+      --macos-profile)
+        shift
+        if [ "$#" -eq 0 ]; then
+          log_error "Missing value for --macos-profile. Expected remote or main."
+          exit 1
+        fi
+
+        validate_macos_profile "$1"
+        macos_profile="$1"
+        ;;
+      *)
+        log_error "Unknown .macos argument: $arg"
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
+
+  validate_macos_mode_profile "$mode" "$macos_profile"
 
   if [ "$(detect_platform)" != "macos" ]; then
     log_error ".macos can only run on macOS."
@@ -172,21 +208,15 @@ main() {
 
   case "$mode" in
     full)
-      ensure_command_line_tools
-      ensure_homebrew
-      if ! load_homebrew_env; then
-        log_error "Homebrew is required but was not found after installation."
-        exit 1
+      if [ "$macos_profile" = "remote" ]; then
+        exec bash "$REPO_ROOT/.macos-remote"
       fi
-      install_brew_bundles
-      install_macos_boring_notch
-      install_macos_tailscale
-      install_macos_ollama
-      install_macos_runtimes
-      install_macos_oh_my_zsh
-      configure_sudo_touch_id
-      apply_macos_defaults
-      ensure_github_ssh_key
+
+      run_macos_full_shared_setup
+      run_macos_full_main_only_pre_runtime_shell
+      run_macos_full_shared_runtime_shell
+      run_macos_full_main_only_finalize
+      run_macos_full_shared_finalize
       ;;
     --post-link)
       if ! load_homebrew_env; then

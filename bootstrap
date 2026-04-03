@@ -103,17 +103,58 @@ clone_or_update_repo() {
 }
 
 run_installer() {
+  local macos_profile="${1:-}"
+
   log_step "Handing off to dotfiles installer"
-  "$DOTFILES_REPO_DIR/install"
+
+  if [ -n "$macos_profile" ]; then
+    "$DOTFILES_REPO_DIR/install" --macos-profile "$macos_profile"
+  else
+    "$DOTFILES_REPO_DIR/install"
+  fi
 }
 
 main() {
+  local arg
+  local macos_profile=""
+  local macos_profile_set=0
   local platform
 
   if [ "${EUID:-$(id -u)}" -eq 0 ]; then
     log_error "Run bootstrap as your normal user, not as root."
     exit 1
   fi
+
+  while [ "$#" -gt 0 ]; do
+    arg="$1"
+
+    case "$arg" in
+      --macos-profile)
+        shift
+        if [ "$#" -eq 0 ]; then
+          log_error "Missing value for --macos-profile. Expected remote or main."
+          exit 1
+        fi
+
+        case "$1" in
+          remote|main)
+            macos_profile="$1"
+            macos_profile_set=1
+            ;;
+          *)
+            log_error "Invalid macOS profile: $1. Expected remote or main."
+            exit 1
+            ;;
+        esac
+        ;;
+      *)
+        log_error "Unknown bootstrap argument: $arg"
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
 
   platform="$(detect_platform)"
 
@@ -125,6 +166,11 @@ main() {
       exit 1
       ;;
   esac
+
+  if [ "$platform" != "macos" ] && [ "$macos_profile_set" -eq 1 ]; then
+    log_error "--macos-profile is only supported on macOS."
+    exit 1
+  fi
 
   acquire_sudo
 
@@ -138,7 +184,12 @@ main() {
   esac
 
   clone_or_update_repo
-  run_installer
+
+  if [ "$macos_profile_set" -eq 1 ]; then
+    run_installer "$macos_profile"
+  else
+    run_installer
+  fi
 }
 
 main "$@"

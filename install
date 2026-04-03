@@ -10,14 +10,68 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 . "$REPO_ROOT/scripts/lib/symlink.sh"
 
 main() {
+  local arg
   local platform
-  local mode="${1:-full}"
+  local mode="full"
+  local macos_profile="main"
+  local macos_profile_set=0
 
   ensure_not_root
   log_step "Preparing installer"
-  acquire_sudo
+
+  while [ "$#" -gt 0 ]; do
+    arg="$1"
+
+    case "$arg" in
+      --skills)
+        if [ "$mode" != "full" ]; then
+          log_error "Only one install mode can be selected: --skills or --macos-defaults."
+          exit 1
+        fi
+
+        mode="--skills"
+        ;;
+      --macos-defaults)
+        if [ "$mode" != "full" ]; then
+          log_error "Only one install mode can be selected: --skills or --macos-defaults."
+          exit 1
+        fi
+
+        mode="--macos-defaults"
+        ;;
+      --macos-profile)
+        shift
+        if [ "$#" -eq 0 ]; then
+          log_error "Missing value for --macos-profile. Expected remote or main."
+          exit 1
+        fi
+
+        case "$1" in
+          remote|main)
+            macos_profile="$1"
+            macos_profile_set=1
+            ;;
+          *)
+            log_error "Invalid macOS profile: $1. Expected remote or main."
+            exit 1
+            ;;
+        esac
+        ;;
+      *)
+        log_error "Unknown install argument: $arg"
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
 
   platform="$(detect_platform)"
+
+  if [ "$platform" != "macos" ] && [ "$macos_profile_set" -eq 1 ]; then
+    log_error "--macos-profile is only supported on macOS."
+    exit 1
+  fi
 
   case "$mode" in
     full)
@@ -29,7 +83,7 @@ main() {
       fi
 
       log_step "Syncing macOS agent skills"
-      "$REPO_ROOT/.macos" --post-link
+      "$REPO_ROOT/.macos" --post-link --macos-profile "$macos_profile"
       log_success "Skills sync complete"
       return
       ;;
@@ -40,7 +94,7 @@ main() {
       fi
 
       log_step "Applying macOS defaults"
-      "$REPO_ROOT/.macos" --defaults
+      "$REPO_ROOT/.macos" --defaults --macos-profile "$macos_profile"
       log_success "macOS defaults applied"
       return
       ;;
@@ -50,10 +104,17 @@ main() {
       ;;
   esac
 
+  acquire_sudo
+
   case "$platform" in
     macos)
-      log_step "Running macOS setup"
-      "$REPO_ROOT/.macos"
+      if [ "$macos_profile" = "remote" ]; then
+        log_step "Running macOS remote setup"
+        bash "$REPO_ROOT/.macos-remote"
+      else
+        log_step "Running macOS setup"
+        "$REPO_ROOT/.macos" --macos-profile "$macos_profile"
+      fi
       ;;
     ubuntu)
       log_step "Running Ubuntu setup"
@@ -72,7 +133,7 @@ main() {
 
   if [ "$platform" = "macos" ]; then
     log_step "Syncing macOS agent skills"
-    "$REPO_ROOT/.macos" --post-link
+    "$REPO_ROOT/.macos" --post-link --macos-profile "$macos_profile"
   fi
 
   log_success "Install complete"
