@@ -135,6 +135,29 @@ install_brew_bundles() {
   install_mas_apps
 }
 
+configure_sudo_touch_id() {
+  local sudo_pam_override="${sudo_pam:-${SUDO_PAM:-}}"
+
+  if [ -n "$sudo_pam_override" ]; then
+    log_info "Skipping Touch ID sudo setup because sudo_pam is already defined"
+    return
+  fi
+
+  if [ ! -f /etc/pam.d/sudo_local.template ]; then
+    log_warn "Skipping Touch ID sudo setup because /etc/pam.d/sudo_local.template was not found."
+    return
+  fi
+
+  if [ -f /etc/pam.d/sudo_local ] && grep -Eq '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]].*)?$' /etc/pam.d/sudo_local; then
+    log_info "Touch ID sudo authentication already enabled"
+    return
+  fi
+
+  log_step "Enabling Touch ID for sudo"
+  sudo cp /etc/pam.d/sudo_local.template /etc/pam.d/sudo_local
+  sudo perl -0pi -e 's/^#([[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so\h*)$/$1/m' /etc/pam.d/sudo_local
+}
+
 main() {
   local mode="${1:-full}"
 
@@ -158,6 +181,7 @@ main() {
       install_macos_tailscale
       install_macos_runtimes
       install_macos_oh_my_zsh
+      configure_sudo_touch_id
       apply_macos_defaults
       ensure_github_ssh_key
       ;;
