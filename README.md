@@ -75,7 +75,12 @@ To re-apply only the macOS defaults later, use:
 
 The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
 
-The macOS post-link flow also installs Oh My OpenCode with `npx --yes oh-my-opencode install --no-tui`. It defaults to `DOTFILES_OMO_OPENAI=yes` to match the checked-in OpenCode agent config, and you can override provider flags with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, and `DOTFILES_OMO_OPENCODE_GO`.
+The macOS post-link flow also installs Oh My OpenCode with `npx --yes oh-my-opencode install --no-tui`. The checked-in `~/.config/opencode/opencode.json` stays plugin-free so plain `opencode` runs vanilla by default, while the shared `omo` shell function injects `oh-my-opencode@latest` at runtime on demand. The post-link installer also strips any `oh-my-openagent`/`oh-my-opencode` plugin entry back out of `opencode.json` after installation so fresh installs preserve that split behavior. You can still override provider flags during install with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, and `DOTFILES_OMO_OPENCODE_GO`.
+
+After linking the dotfiles on either macOS or Linux:
+
+- `opencode` runs without `oh-my-opencode`
+- `omo` runs OpenCode with a runtime-only `oh-my-opencode` override
 
 If you already cloned the repo, you can still run the local installer directly:
 
