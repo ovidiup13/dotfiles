@@ -9,6 +9,7 @@ fzf
 git
 git-lfs
 gnupg
+1password-cli
 jq
 locales
 ncdu

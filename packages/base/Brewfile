@@ -1,5 +1,6 @@
 brew "bat"
 brew "btop"
+cask "1password-cli@beta"
 brew "direnv"
 brew "eza"
 brew "fd"

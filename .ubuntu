@@ -6,6 +6,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 . "$REPO_ROOT/scripts/lib/common.sh"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
+. "$REPO_ROOT/scripts/install/onepassword.sh"
 . "$REPO_ROOT/scripts/install/shell.sh"
 . "$REPO_ROOT/scripts/install/tailscale.sh"
 
@@ -40,6 +41,7 @@ main() {
   acquire_sudo
   require_apt
   export DEBIAN_FRONTEND=noninteractive
+  setup_ubuntu_onepassword_cli_beta_repo
   install_apt_packages
   install_ubuntu_tailscale
   verify_ubuntu_shell_prereqs
