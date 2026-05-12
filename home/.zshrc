@@ -42,11 +42,6 @@ if command -v direnv >/dev/null 2>&1; then
   eval "$(direnv hook zsh)"
 fi
 
-if command -v fnm >/dev/null 2>&1; then
-  eval "$(fnm env --use-on-cd --shell zsh)"
-  alias nvm='fnm'
-fi
-
 if command -v goenv >/dev/null 2>&1; then
   eval "$(goenv init - zsh)"
 fi
@@ -89,4 +84,8 @@ if [ "$(uname -s)" != "Darwin" ]; then
       break
     fi
   done
+fi
+
+if [ -r "$HOME/.vite-plus/env" ]; then
+  . "$HOME/.vite-plus/env"
 fi

@@ -1,7 +1,6 @@
 tap "pulumi/tap"
 
 brew "diff-so-fancy"
-brew "fnm"
 brew "goenv"
 brew "jenv"
 brew "mas"

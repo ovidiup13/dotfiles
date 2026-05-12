@@ -10,7 +10,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - installs macOS agent skills listed in `packages/macos/skills.txt`
 - installs Oh My OpenCode during the macOS post-link flow and verifies it with `doctor`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
-- installs the latest Node.js LTS via `fnm` and the latest Go release via `goenv` on macOS
+- installs Node.js LTS via Vite+ `vp` and the latest Go release via `goenv` on macOS
 - applies selected macOS defaults during the macOS install flow
 - symlinks managed files from `home/` into `$HOME`
 - installs Oh My Zsh plus custom plugin repos on macOS, and keeps Ubuntu on a lighter Zsh setup
