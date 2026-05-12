@@ -32,3 +32,14 @@ load_homebrew_env() {
 
   return 1
 }
+
+run_brew_bundle() {
+  local brewfile="$1"
+
+  if brew bundle --file "$brewfile"; then
+    return 0
+  fi
+
+  log_warn "brew bundle failed for $brewfile; retrying without Homebrew API metadata."
+  HOMEBREW_NO_INSTALL_FROM_API=1 brew bundle --file "$brewfile"
+}

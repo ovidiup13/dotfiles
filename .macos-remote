@@ -13,10 +13,10 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 install_remote_brew_bundles() {
   log_step "Applying Brewfile: $REPO_ROOT/packages/base/Brewfile"
-  brew bundle --file "$REPO_ROOT/packages/base/Brewfile"
+  run_brew_bundle "$REPO_ROOT/packages/base/Brewfile"
 
   log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile.remote"
-  brew bundle --file "$REPO_ROOT/packages/macos/Brewfile.remote"
+  run_brew_bundle "$REPO_ROOT/packages/macos/Brewfile.remote"
 }
 
 main() {

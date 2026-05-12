@@ -73,10 +73,10 @@ install_mas_apps() {
 
 install_brew_bundles() {
   log_step "Applying Brewfile: $REPO_ROOT/packages/base/Brewfile"
-  brew bundle --file "$REPO_ROOT/packages/base/Brewfile"
+  run_brew_bundle "$REPO_ROOT/packages/base/Brewfile"
 
   log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile"
-  brew bundle --file "$REPO_ROOT/packages/macos/Brewfile"
+  run_brew_bundle "$REPO_ROOT/packages/macos/Brewfile"
 
   log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile.mas"
   install_mas_apps
