@@ -8,7 +8,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - requests `sudo` once and keeps the session alive while the install runs
 - installs platform prerequisites and packages
 - installs macOS agent skills listed in `packages/macos/skills.txt`
-- installs Oh My OpenCode during the macOS post-link flow and verifies it with `doctor`
+- installs Oh My OpenAgent during the macOS post-link flow and verifies it with `doctor`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
 - installs Node.js LTS via Vite+ `vp` and the latest Go release via `goenv` on macOS
 - applies selected macOS defaults during the macOS install flow
@@ -38,7 +38,7 @@ The bootstrap script installs the minimum prerequisites needed to clone the repo
 macOS installs support two profiles:
 
 - `main`, the default profile. This is the full local-machine setup driven by `.macos`, with the standard macOS Brewfile, Mac App Store apps, defaults, and the main-only app installers such as Tailscale, Ollama, and Boring Notch.
-- `remote`, the CLI and devtools profile. This is driven by a separate `.macos-remote` installer, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, macOS post-link skills sync, and Oh My OpenCode, while skipping the main-only app-style installs and macOS defaults flow.
+- `remote`, the CLI and devtools profile. This is driven by a separate `.macos-remote` installer, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, macOS post-link skills sync, and Oh My OpenAgent, while skipping the main-only app-style installs and macOS defaults flow.
 
 If you don't pass `--macos-profile`, the installer uses `main` for backward compatibility.
 
@@ -75,12 +75,12 @@ To re-apply only the macOS defaults later, use:
 
 The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
 
-The macOS post-link flow also installs Oh My OpenCode with `npx --yes oh-my-opencode install --no-tui`. The checked-in `~/.config/opencode/opencode.json` stays plugin-free so plain `opencode` runs vanilla by default, while the shared `omo` shell function injects `oh-my-opencode@latest` at runtime on demand. The post-link installer also strips any `oh-my-openagent`/`oh-my-opencode` plugin entry back out of `opencode.json` after installation so fresh installs preserve that split behavior. You can still override provider flags during install with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, and `DOTFILES_OMO_OPENCODE_GO`.
+The macOS post-link flow also installs Oh My OpenAgent with `bunx oh-my-openagent install --no-tui --skip-auth`. The checked-in `~/.config/opencode/opencode.json` stays plugin-free so plain `opencode` runs vanilla by default, while the shared `omo` shell function injects `oh-my-openagent@latest` at runtime on demand. The post-link installer also strips any `oh-my-openagent`/`oh-my-opencode` plugin entry back out of `opencode.json` after installation so fresh installs preserve that split behavior. You can still override provider flags during install with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, `DOTFILES_OMO_OPENCODE_GO`, `DOTFILES_OMO_KIMI_FOR_CODING`, and `DOTFILES_OMO_VERCEL_AI_GATEWAY`.
 
 After linking the dotfiles on either macOS or Linux:
 
-- `opencode` runs without `oh-my-opencode`
-- `omo` runs OpenCode with a runtime-only `oh-my-opencode` override
+- `opencode` runs without `oh-my-openagent`
+- `omo` runs OpenCode with a runtime-only `oh-my-openagent` override
 
 If you already cloned the repo, you can still run the local installer directly:
 
@@ -97,7 +97,7 @@ cd ~/.dotfiles
 - `.macos-remote` handles the remote macOS CLI/devtools install
 - `scripts/install/macos_common.sh` contains shared macOS installer helpers used by both macOS entrypoints
 - `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
-- `scripts/install/oh_my_opencode.sh` installs and verifies Oh My OpenCode during the macOS post-link stage
+- `scripts/install/oh_my_opencode.sh` installs and verifies Oh My OpenAgent during the macOS post-link stage
 - `packages/macos/skills.txt` lists exact Skills CLI installs as `<source> <skill>` on macOS
 - `.ubuntu` handles Ubuntu prerequisites and apt installs
 - `home/` contains the files that get symlinked into `$HOME`
@@ -186,7 +186,7 @@ assert remote_result.returncode == 99
 def post_link_stubs(stub_dir):
     write_exec(stub_dir / "skills", '#!/bin/sh\nif [ "$1" = "list" ]; then printf "[]\\n"; exit 0; fi\nexit 0\n')
     write_exec(stub_dir / "opencode", '#!/bin/sh\nexit 0\n')
-    write_exec(stub_dir / "npx", '#!/bin/sh\nexit 0\n')
+    write_exec(stub_dir / "bunx", '#!/bin/sh\nexit 0\n')
 
 def post_link_setup(home_dir):
     config_dir = home_dir / ".config" / "opencode"

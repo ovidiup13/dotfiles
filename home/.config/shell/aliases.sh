@@ -50,7 +50,7 @@ omo() {
       | if any(.[]; test("^oh-my-open(agent|code)(@.*)?$")) then
           .
         else
-          . + ["oh-my-opencode@latest"]
+          . + ["oh-my-openagent@latest"]
         end
     )
   ' "$config_file")

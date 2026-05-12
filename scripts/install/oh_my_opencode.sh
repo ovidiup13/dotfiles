@@ -69,6 +69,8 @@ install_macos_oh_my_opencode() {
   local opencode_zen_flag="${DOTFILES_OMO_OPENCODE_ZEN:-no}"
   local zai_coding_plan_flag="${DOTFILES_OMO_ZAI_CODING_PLAN:-no}"
   local opencode_go_flag="${DOTFILES_OMO_OPENCODE_GO:-no}"
+  local kimi_for_coding_flag="${DOTFILES_OMO_KIMI_FOR_CODING:-no}"
+  local vercel_ai_gateway_flag="${DOTFILES_OMO_VERCEL_AI_GATEWAY:-no}"
 
   validate_omo_claude_flag "$claude_flag"
   validate_omo_yes_no_flag "DOTFILES_OMO_OPENAI" "$openai_flag"
@@ -77,53 +79,58 @@ install_macos_oh_my_opencode() {
   validate_omo_yes_no_flag "DOTFILES_OMO_OPENCODE_ZEN" "$opencode_zen_flag"
   validate_omo_yes_no_flag "DOTFILES_OMO_ZAI_CODING_PLAN" "$zai_coding_plan_flag"
   validate_omo_yes_no_flag "DOTFILES_OMO_OPENCODE_GO" "$opencode_go_flag"
+  validate_omo_yes_no_flag "DOTFILES_OMO_KIMI_FOR_CODING" "$kimi_for_coding_flag"
+  validate_omo_yes_no_flag "DOTFILES_OMO_VERCEL_AI_GATEWAY" "$vercel_ai_gateway_flag"
 
   if ! command_exists opencode; then
-    log_warn "Skipping Oh My OpenCode setup because opencode is not installed."
+    log_warn "Skipping Oh My OpenAgent setup because opencode is not installed."
     return
   fi
 
-  if ! command_exists npx; then
-    log_warn "Skipping Oh My OpenCode setup because npx is not available."
+  if ! command_exists bunx; then
+    log_warn "Skipping Oh My OpenAgent setup because bunx is not available."
     return
   fi
 
   if [ ! -f "$HOME/.config/opencode/opencode.json" ]; then
-    log_warn "Skipping Oh My OpenCode setup because ~/.config/opencode/opencode.json was not found."
+    log_warn "Skipping Oh My OpenAgent setup because ~/.config/opencode/opencode.json was not found."
     return
   fi
 
   if ! sanitize_oh_my_opencode_config; then
-    log_error "Failed to sanitize ~/.config/opencode/opencode.json before Oh My OpenCode setup. Plain opencode would not be guaranteed to stay plugin-free."
+    log_error "Failed to sanitize ~/.config/opencode/opencode.json before Oh My OpenAgent setup. Plain opencode would not be guaranteed to stay plugin-free."
     return 1
   fi
 
-  if npx --yes oh-my-opencode doctor >/dev/null 2>&1; then
-    log_info "Oh My OpenCode already installed and healthy"
+  if bunx oh-my-openagent doctor >/dev/null 2>&1; then
+    log_info "Oh My OpenAgent already installed and healthy"
     return
   fi
 
-  log_step "Installing Oh My OpenCode"
-  if ! npx --yes oh-my-opencode install \
+  log_step "Installing Oh My OpenAgent"
+  if ! bunx oh-my-openagent install \
     --no-tui \
+    --skip-auth \
     --claude="$claude_flag" \
     --openai="$openai_flag" \
     --gemini="$gemini_flag" \
     --copilot="$copilot_flag" \
     --opencode-zen="$opencode_zen_flag" \
     --zai-coding-plan="$zai_coding_plan_flag" \
-    --opencode-go="$opencode_go_flag"; then
-    log_warn "Oh My OpenCode installation failed. Continuing without it."
+    --opencode-go="$opencode_go_flag" \
+    --kimi-for-coding="$kimi_for_coding_flag" \
+    --vercel-ai-gateway="$vercel_ai_gateway_flag"; then
+    log_warn "Oh My OpenAgent installation failed. Continuing without it."
     return
   fi
 
   if ! sanitize_oh_my_opencode_config; then
-    log_error "Failed to sanitize ~/.config/opencode/opencode.json after Oh My OpenCode install. Plain opencode would not be guaranteed to stay plugin-free."
+    log_error "Failed to sanitize ~/.config/opencode/opencode.json after Oh My OpenAgent install. Plain opencode would not be guaranteed to stay plugin-free."
     return 1
   fi
 
-  log_step "Verifying Oh My OpenCode setup"
-  if ! npx --yes oh-my-opencode doctor; then
-    log_warn "Oh My OpenCode doctor verification failed. Continuing without blocking the rest of post-link setup."
+  log_step "Verifying Oh My OpenAgent setup"
+  if ! bunx oh-my-openagent doctor; then
+    log_warn "Oh My OpenAgent doctor verification failed. Continuing without blocking the rest of post-link setup."
   fi
 }
