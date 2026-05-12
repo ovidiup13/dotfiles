@@ -29,38 +29,6 @@ validate_omo_claude_flag() {
   esac
 }
 
-sanitize_oh_my_opencode_config() {
-  local config_file="$HOME/.config/opencode/opencode.json"
-  local tmp_file
-
-  if [ ! -f "$config_file" ]; then
-    return 0
-  fi
-
-  tmp_file="$(mktemp)"
-
-  if ! jq '
-    if (.plugin // null) == null then
-      .
-    else
-      .plugin = [
-        (.plugin // [])[]
-        | select(test("^oh-my-open(agent|code)(@.*)?$") | not)
-      ]
-      | if (.plugin | length) == 0 then
-          del(.plugin)
-        else
-          .
-        end
-    end
-  ' "$config_file" > "$tmp_file"; then
-    rm -f "$tmp_file"
-    return 1
-  fi
-
-  mv "$tmp_file" "$config_file"
-}
-
 install_macos_oh_my_opencode() {
   local claude_flag="${DOTFILES_OMO_CLAUDE:-no}"
   local openai_flag="${DOTFILES_OMO_OPENAI:-yes}"
@@ -97,11 +65,6 @@ install_macos_oh_my_opencode() {
     return
   fi
 
-  if ! sanitize_oh_my_opencode_config; then
-    log_error "Failed to sanitize ~/.config/opencode/opencode.json before Oh My OpenAgent setup. Plain opencode would not be guaranteed to stay plugin-free."
-    return 1
-  fi
-
   if bunx oh-my-openagent doctor >/dev/null 2>&1; then
     log_info "Oh My OpenAgent already installed and healthy"
     return
@@ -122,11 +85,6 @@ install_macos_oh_my_opencode() {
     --vercel-ai-gateway="$vercel_ai_gateway_flag"; then
     log_warn "Oh My OpenAgent installation failed. Continuing without it."
     return
-  fi
-
-  if ! sanitize_oh_my_opencode_config; then
-    log_error "Failed to sanitize ~/.config/opencode/opencode.json after Oh My OpenAgent install. Plain opencode would not be guaranteed to stay plugin-free."
-    return 1
   fi
 
   log_step "Verifying Oh My OpenAgent setup"

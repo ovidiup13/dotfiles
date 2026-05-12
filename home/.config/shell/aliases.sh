@@ -39,21 +39,3 @@ if command -v nnn >/dev/null 2>&1; then
 fi
 
 alias refresh='exec "$SHELL" -l'
-
-omo() {
-  local config_file="$HOME/.config/opencode/opencode.json"
-  local updated_json
-
-  updated_json=$(jq '
-    .plugin = (
-      (.plugin // [])
-      | if any(.[]; test("^oh-my-open(agent|code)(@.*)?$")) then
-          .
-        else
-          . + ["oh-my-openagent@latest"]
-        end
-    )
-  ' "$config_file")
-
-  OPENCODE_CONFIG_CONTENT="$updated_json" opencode "$@"
-}
