@@ -63,7 +63,7 @@
       "skillPath": "skills/find-skills/SKILL.md",
       "skillFolderHash": "3013fdeb8a11b10b1eb795ec3ae8bfca38f7c26d",
       "installedAt": "2026-03-23T20:19:33.844Z",
-      "updatedAt": "2026-03-23T20:20:31.584Z"
+      "updatedAt": "2026-04-12T23:41:07.027Z"
     },
     "ai-sdk": {
       "source": "vercel/ai",
@@ -93,5 +93,21 @@
       "updatedAt": "2026-03-23T20:20:37.911Z"
     }
   },
-  "dismissed": {}
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "firebender",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode",
+    "warp"
+  ]
 }
