@@ -86,6 +86,8 @@ if [ "$(uname -s)" != "Darwin" ]; then
   done
 fi
 
+. "$HOME/.local/bin/env"
+
 if [ -r "$HOME/.vite-plus/env" ]; then
   . "$HOME/.vite-plus/env"
 fi
