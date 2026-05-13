@@ -5,8 +5,27 @@ set -euo pipefail
 export GOENV_ROOT="${GOENV_ROOT:-$HOME/.goenv}"
 
 install_macos_runtimes() {
+  install_uv
   install_vp_node_lts
   install_goenv_latest
+}
+
+install_ubuntu_runtimes() {
+  install_uv
+}
+
+install_uv() {
+  if command_exists uv; then
+    return 0
+  fi
+
+  if ! command_exists curl; then
+    log_warn "Skipping uv setup because curl is not installed."
+    return 1
+  fi
+
+  log_step "Installing uv from astral.sh"
+  curl -LsSf https://astral.sh/uv/install.sh | sh
 }
 
 install_vp_cli() {

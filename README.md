@@ -10,6 +10,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - installs macOS agent skills listed in `packages/macos/skills.txt`
 - installs Oh My OpenAgent during the macOS post-link flow and verifies it with `doctor`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
+- installs `uv` from Astral on all platforms
 - installs Node.js LTS via Vite+ `vp` and the latest Go release via `goenv` on macOS
 - applies selected macOS defaults during the macOS install flow
 - symlinks managed files from `home/` into `$HOME`
