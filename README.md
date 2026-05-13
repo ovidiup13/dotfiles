@@ -10,6 +10,8 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - installs macOS agent skills listed in `packages/macos/skills.txt`
 - installs Oh My OpenAgent during the macOS post-link flow and verifies it with `doctor`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
+- installs `uv` from Astral on all platforms
+- installs Basic Memory with `uv` on all platforms and configures its local OpenCode MCP server
 - installs Node.js LTS via Vite+ `vp` and the latest Go release via `goenv` on macOS
 - applies selected macOS defaults during the macOS install flow
 - symlinks managed files from `home/` into `$HOME`
@@ -105,6 +107,7 @@ The macOS post-link flow also installs Oh My OpenAgent with `bunx oh-my-openagen
 After linking the dotfiles on either macOS or Linux:
 
 - `opencode` runs with `oh-my-openagent@latest`
+- `opencode` connects to Basic Memory through `uvx basic-memory mcp`
 
 If you already cloned the repo, you can still run the local installer directly:
 
