@@ -6,12 +6,20 @@ export GOENV_ROOT="${GOENV_ROOT:-$HOME/.goenv}"
 
 install_macos_runtimes() {
   install_uv
+  install_basic_memory
   install_vp_node_lts
   install_goenv_latest
 }
 
 install_ubuntu_runtimes() {
   install_uv
+  install_basic_memory
+}
+
+load_uv_env() {
+  if [ -r "$HOME/.local/bin/env" ]; then
+    . "$HOME/.local/bin/env"
+  fi
 }
 
 install_uv() {
@@ -26,6 +34,28 @@ install_uv() {
 
   log_step "Installing uv from astral.sh"
   curl -LsSf https://astral.sh/uv/install.sh | sh
+  load_uv_env
+
+  if ! command_exists uv; then
+    log_warn "uv was installed but is not available in this shell."
+    return 1
+  fi
+}
+
+install_basic_memory() {
+  if command_exists basic-memory; then
+    return 0
+  fi
+
+  if ! install_uv; then
+    log_warn "Skipping Basic Memory setup because uv is not available."
+    return 1
+  fi
+
+  load_uv_env
+
+  log_step "Installing Basic Memory with uv"
+  uv tool install basic-memory
 }
 
 install_vp_cli() {
