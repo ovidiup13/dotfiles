@@ -43,6 +43,7 @@ Validation is mostly shell syntax checking plus targeted smoke tests.
 
 - Full install: `./install`
 - macOS skills sync only: `./install --skills`
+- 1Password secrets sync only: `./install --secrets`
 - Bootstrap flow: `./bootstrap`
 - macOS setup directly: `./.macos`
 - macOS post-link skills sync: `./.macos --post-link`
@@ -58,6 +59,7 @@ Use `bash -n` for any shell file you edit.
 - Ubuntu installer: `bash -n .ubuntu`
 - Shared library: `bash -n scripts/lib/common.sh`
 - Skills installer: `bash -n scripts/install/skills.sh`
+- Secrets installer: `bash -n scripts/install/secrets.sh`
 
 ### Single-File / Single-Target Validation
 
@@ -65,12 +67,14 @@ There is no single-test framework, so the closest equivalent is validating one s
 
 - Validate one edited script: `bash -n path/to/file.sh`
 - Smoke test one installer path: `./install --skills`
+- Smoke test 1Password secrets sync with a stubbed `op`: `./install --secrets`
 - Smoke test macOS post-link stage only: `./.macos --post-link`
 - Smoke test Ubuntu path only: `./.ubuntu`
 
 ### Helpful Focused Checks
 
 - Verify installed skills manifest behavior: `./install --skills`
+- Verify 1Password Environment sync behavior: `./install --secrets`
 - Verify skill manifest format manually: inspect `packages/macos/skills.txt`
 - Verify apt package list changes: inspect `packages/ubuntu/apt.txt`
 - Verify Brew package list changes: inspect `packages/base/Brewfile` and `packages/macos/Brewfile`
@@ -196,6 +200,7 @@ Do not assume they are installed unless you verify first.
 
 - Installer logic change: `bash -n install && bash -n .macos && bash -n .ubuntu`
 - Skills logic change: `bash -n scripts/install/skills.sh && ./install --skills`
+- Secrets logic change: `bash -n scripts/install/secrets.sh && ./install --secrets`
 - Bootstrap logic change: `bash -n bootstrap`
 - Symlink behavior change: `bash -n scripts/lib/symlink.sh` and inspect `home/` targets carefully
 

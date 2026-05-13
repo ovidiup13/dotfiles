@@ -15,6 +15,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - symlinks managed files from `home/` into `$HOME`
 - installs Oh My Zsh plus custom plugin repos on macOS, and keeps Ubuntu on a lighter Zsh setup
 - prompts for Git name/email and writes them to `~/.gitconfig.local`
+- syncs 1Password Environment variables into a local `~/.secrets/tokens` file on demand
 - backs up conflicting files into `~/.dotfiles-backups/<timestamp>/`
 
 ## Usage
@@ -73,6 +74,30 @@ To re-apply only the macOS defaults later, use:
 
 `./install --macos-defaults --macos-profile remote` is rejected because the defaults flow is main-only.
 
+## Secrets
+
+Secrets are managed outside the repository with 1Password Environments. The checked-in shell environment file sources `~/.secrets/tokens` when it exists, but that file is generated locally and must not be committed.
+
+On the first `./install` or `./install --secrets` run, if `~/.secrets/tokens` does not exist and you did not pass an Environment ID, the installer prompts for the 1Password Environment ID interactively. After a successful sync it writes that ID into `~/.secrets/tokens` as `DOTFILES_1PASSWORD_ENVIRONMENT=...`, so later installs can reuse it automatically.
+
+You can still provide the Environment ID explicitly with either an environment variable:
+
+```sh
+DOTFILES_1PASSWORD_ENVIRONMENT=<environment-id> ./install --secrets
+```
+
+or an explicit flag:
+
+```sh
+./install --secrets --1password-environment <environment-id>
+```
+
+The secrets sync requires the `op` CLI to be installed and authenticated. It writes `DOTFILES_1PASSWORD_ENVIRONMENT=<environment-id>` plus all variables returned by `op environment read <environment-id>` to `~/.secrets/tokens`, sets `~/.secrets` to mode `700`, and sets the generated file to mode `600`. The generated file is plaintext on disk and is sourced by new shells, so exported secrets are available to child processes in those shells.
+
+Full `./install` now runs the secrets sync automatically after package setup and dotfile linking. The prompt only appears if `DOTFILES_1PASSWORD_ENVIRONMENT` is missing from the generated secrets file and you did not provide it explicitly.
+
+## OpenCode
+
 The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
 
 The macOS post-link flow also installs Oh My OpenAgent with `bunx oh-my-openagent install --no-tui --skip-auth`. The checked-in `~/.config/opencode/opencode.json` includes `oh-my-openagent@latest`, so `opencode` always loads the plugin. You can still override provider flags during install with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, `DOTFILES_OMO_OPENCODE_GO`, `DOTFILES_OMO_KIMI_FOR_CODING`, and `DOTFILES_OMO_VERCEL_AI_GATEWAY`.
@@ -94,6 +119,7 @@ cd ~/.dotfiles
 - `install` is the main entrypoint
 - `.macos` handles the main macOS workstation install and shared macOS maintenance modes
 - `.macos-remote` handles the remote macOS CLI/devtools install
+- `scripts/install/secrets.sh` syncs 1Password Environment variables to the local secrets file
 - `scripts/install/macos_common.sh` contains shared macOS installer helpers used by both macOS entrypoints
 - `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
 - `scripts/install/oh_my_opencode.sh` installs and verifies Oh My OpenAgent during the macOS post-link stage

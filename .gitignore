@@ -1,3 +1,6 @@
 .local
 .zcompdump
 .sisyphus
+.secrets/
+home/.secrets/
+**/.secrets/tokens
