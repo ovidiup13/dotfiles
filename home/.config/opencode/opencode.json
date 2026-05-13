@@ -1,5 +1,11 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "homeassistant": {
+      "type": "remote",
+      "url": "{env:HA_MCP_WEBHOOK_URL}"
+    }
+  },
   "plugin": [
     "oh-my-openagent@latest"
   ]
