@@ -6,6 +6,7 @@ REPO_ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 . "$REPO_ROOT/scripts/lib/common.sh"
 . "$REPO_ROOT/scripts/install/git.sh"
+. "$REPO_ROOT/scripts/install/secrets.sh"
 . "$REPO_ROOT/scripts/lib/sudo.sh"
 . "$REPO_ROOT/scripts/lib/symlink.sh"
 
@@ -15,6 +16,7 @@ main() {
   local mode="full"
   local macos_profile="main"
   local macos_profile_set=0
+  local onepassword_environment="${DOTFILES_1PASSWORD_ENVIRONMENT:-}"
 
   ensure_not_root
   log_step "Preparing installer"
@@ -25,7 +27,7 @@ main() {
     case "$arg" in
       --skills)
         if [ "$mode" != "full" ]; then
-          log_error "Only one install mode can be selected: --skills or --macos-defaults."
+          log_error "Only one install mode can be selected: --skills, --macos-defaults, or --secrets."
           exit 1
         fi
 
@@ -33,11 +35,28 @@ main() {
         ;;
       --macos-defaults)
         if [ "$mode" != "full" ]; then
-          log_error "Only one install mode can be selected: --skills or --macos-defaults."
+          log_error "Only one install mode can be selected: --skills, --macos-defaults, or --secrets."
           exit 1
         fi
 
         mode="--macos-defaults"
+        ;;
+      --secrets)
+        if [ "$mode" != "full" ]; then
+          log_error "Only one install mode can be selected: --skills, --macos-defaults, or --secrets."
+          exit 1
+        fi
+
+        mode="--secrets"
+        ;;
+      --1password-environment)
+        shift
+        if [ "$#" -eq 0 ]; then
+          log_error "Missing value for --1password-environment."
+          exit 1
+        fi
+
+        onepassword_environment="$1"
         ;;
       --macos-profile)
         shift
@@ -98,6 +117,12 @@ main() {
       log_success "macOS defaults applied"
       return
       ;;
+    --secrets)
+      log_step "Syncing 1Password Environment secrets"
+      sync_1password_secrets "$onepassword_environment"
+      log_success "Secrets sync complete"
+      return
+      ;;
     *)
       log_error "Unknown install mode: $mode"
       exit 1
@@ -128,6 +153,9 @@ main() {
 
   log_step "Linking managed dotfiles into $HOME"
   link_home_tree "$REPO_ROOT"
+
+  log_step "Syncing 1Password Environment secrets"
+  sync_1password_secrets "$onepassword_environment"
 
   configure_git_identity
 

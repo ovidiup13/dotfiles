@@ -22,7 +22,18 @@ case "$(uname -s)" in
 esac
 
 if [ -f "$HOME/.secrets/tokens" ]; then
+  case $- in
+    *a*) secrets_allexport_was_set=1 ;;
+    *) secrets_allexport_was_set=0; set -a ;;
+  esac
+
   . "$HOME/.secrets/tokens"
+
+  if [ "$secrets_allexport_was_set" -eq 0 ]; then
+    set +a
+  fi
+
+  unset secrets_allexport_was_set
 fi
 
 if [ -n "${SSH_CONNECTION:-}" ]; then
