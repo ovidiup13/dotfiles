@@ -24,6 +24,8 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/ovidiup13/dotfiles/main/
 
 The bootstrap script installs only the minimum prerequisites required to clone or update the repo at `~/.dotfiles`, then hands off to `~/.dotfiles/install`.
 
+`install` rejects root execution before doing any bootstrap work. If Bun is missing, it is installed only for mutating commands such as `install`, `apply`, `link`, `secrets`, `skills`, and `macos-defaults`. Read-only commands such as `help`, `check`, `doctor`, and dry-run invocations do not auto-install Bun.
+
 ## Profiles
 
 Two profile names are supported:

@@ -21,6 +21,16 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+bun_available() {
+  command_exists bun || [ -x "$BUN_INSTALL/bin/bun" ]
+}
+
+load_bun_env() {
+  if [ -x "$BUN_INSTALL/bin/bun" ]; then
+    export PATH="$BUN_INSTALL/bin:$PATH"
+  fi
+}
+
 print_help_without_bun() {
   cat <<'EOF'
 Usage: ./install [command] [options]
@@ -45,12 +55,9 @@ EOF
 }
 
 ensure_bun() {
-  if command_exists bun; then
-    return
-  fi
+  load_bun_env
 
-  if [ -x "$BUN_INSTALL/bin/bun" ]; then
-    export PATH="$BUN_INSTALL/bin:$PATH"
+  if command_exists bun; then
     return
   fi
 
@@ -69,11 +76,97 @@ ensure_bun() {
   fi
 }
 
-case "${1:-}" in
-  -h|--help|help)
-    if ! command_exists bun && [ ! -x "$BUN_INSTALL/bin/bun" ]; then
+is_truthy() {
+  case "${1:-}" in
+    1|true|TRUE|yes|YES|on|ON)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+dry_run_requested() {
+  local arg
+
+  if is_truthy "${DOTFILES_DRY_RUN:-}"; then
+    return 0
+  fi
+
+  for arg in "$@"; do
+    if [ "$arg" = "--dry-run" ]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+requested_command() {
+  local arg
+  local skip_next=0
+
+  for arg in "$@"; do
+    if [ "$skip_next" -eq 1 ]; then
+      skip_next=0
+      continue
+    fi
+
+    case "$arg" in
+      -h|--help|help)
+        printf 'help\n'
+        return
+        ;;
+      --profile|--platform|--1password-environment)
+        skip_next=1
+        ;;
+      --dry-run)
+        ;;
+      --*)
+        printf 'unknown\n'
+        return
+        ;;
+      *)
+        printf '%s\n' "$arg"
+        return
+        ;;
+    esac
+  done
+
+  printf 'install\n'
+}
+
+if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+  log_error "Run this installer as your normal user, not as root."
+  exit 1
+fi
+
+command_name="$(requested_command "$@")"
+
+case "$command_name" in
+  help)
+    if ! bun_available; then
       print_help_without_bun
       exit 0
+    fi
+    ;;
+  check|doctor)
+    if ! bun_available; then
+      log_error "Bun is required for './install $command_name'. Run './install' once or install Bun manually."
+      exit 1
+    fi
+    ;;
+  install|apply|link|secrets|skills|macos-defaults)
+    if dry_run_requested "$@" && ! bun_available; then
+      log_error "Bun is required for dry-run commands. Run './install' once or install Bun manually."
+      exit 1
+    fi
+    ;;
+  *)
+    if ! bun_available; then
+      log_error "Unknown install command or option: $command_name"
+      exit 1
     fi
     ;;
 esac
