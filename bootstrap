@@ -103,12 +103,12 @@ clone_or_update_repo() {
 }
 
 run_installer() {
-  local macos_profile="${1:-}"
+  local profile="${1:-}"
 
   log_step "Handing off to dotfiles installer"
 
-  if [ -n "$macos_profile" ]; then
-    "$DOTFILES_REPO_DIR/install" --macos-profile "$macos_profile"
+  if [ -n "$profile" ]; then
+    "$DOTFILES_REPO_DIR/install" --profile "$profile"
   else
     "$DOTFILES_REPO_DIR/install"
   fi
@@ -116,8 +116,8 @@ run_installer() {
 
 main() {
   local arg
-  local macos_profile=""
-  local macos_profile_set=0
+  local profile=""
+  local profile_set=0
   local platform
 
   if [ "${EUID:-$(id -u)}" -eq 0 ]; then
@@ -129,20 +129,20 @@ main() {
     arg="$1"
 
     case "$arg" in
-      --macos-profile)
+      --profile)
         shift
         if [ "$#" -eq 0 ]; then
-          log_error "Missing value for --macos-profile. Expected remote or main."
+          log_error "Missing value for --profile. Expected personal or worker."
           exit 1
         fi
 
         case "$1" in
-          remote|main)
-            macos_profile="$1"
-            macos_profile_set=1
+          personal|worker)
+            profile="$1"
+            profile_set=1
             ;;
           *)
-            log_error "Invalid macOS profile: $1. Expected remote or main."
+            log_error "Invalid profile: $1. Expected personal or worker."
             exit 1
             ;;
         esac
@@ -167,11 +167,6 @@ main() {
       ;;
   esac
 
-  if [ "$platform" != "macos" ] && [ "$macos_profile_set" -eq 1 ]; then
-    log_error "--macos-profile is only supported on macOS."
-    exit 1
-  fi
-
   acquire_sudo
 
   case "$platform" in
@@ -185,8 +180,8 @@ main() {
 
   clone_or_update_repo
 
-  if [ "$macos_profile_set" -eq 1 ]; then
-    run_installer "$macos_profile"
+  if [ "$profile_set" -eq 1 ]; then
+    run_installer "$profile"
   else
     run_installer
   fi

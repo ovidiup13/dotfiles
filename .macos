@@ -86,10 +86,10 @@ validate_macos_profile() {
   local profile="$1"
 
   case "$profile" in
-    remote|main)
+    personal|worker)
       ;;
     *)
-      log_error "Invalid macOS profile: $profile. Expected remote or main."
+      log_error "Invalid macOS profile: $profile. Expected personal or worker."
       exit 1
       ;;
   esac
@@ -99,8 +99,8 @@ validate_macos_mode_profile() {
   local mode="$1"
   local profile="$2"
 
-  if [ "$mode" = "--defaults" ] && [ "$profile" = "remote" ]; then
-    log_error "--defaults only supports the main macOS profile."
+  if [ "$mode" = "--defaults" ] && [ "$profile" = "worker" ]; then
+    log_error "--defaults only supports the personal macOS profile."
     exit 1
   fi
 }
@@ -163,7 +163,7 @@ main() {
   local arg
   local mode="full"
   local mode_set=0
-  local macos_profile="main"
+  local macos_profile="personal"
 
   while [ "$#" -gt 0 ]; do
     arg="$1"
@@ -178,10 +178,10 @@ main() {
         mode="$arg"
         mode_set=1
         ;;
-      --macos-profile)
+      --profile)
         shift
         if [ "$#" -eq 0 ]; then
-          log_error "Missing value for --macos-profile. Expected remote or main."
+          log_error "Missing value for --profile. Expected personal or worker."
           exit 1
         fi
 
@@ -208,7 +208,7 @@ main() {
 
   case "$mode" in
     full)
-      if [ "$macos_profile" = "remote" ]; then
+      if [ "$macos_profile" = "worker" ]; then
         exec bash "$REPO_ROOT/.macos-remote"
       fi
 
