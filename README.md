@@ -1,148 +1,189 @@
 # Dotfiles
 
-Cross-platform dotfiles with a single `./install` entrypoint.
+Cross-platform dotfiles and machine bootstrap with one installer CLI:
 
-## What it does
+```sh
+./install
+```
 
-- detects whether it is running on macOS or Ubuntu
-- requests `sudo` once and keeps the session alive while the install runs
-- installs platform prerequisites and packages
-- installs macOS agent skills listed in `packages/macos/skills.txt`
-- installs Oh My OpenAgent during the macOS post-link flow and verifies it with `doctor`
-- installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
-- installs `uv` from Astral on all platforms
-- installs Basic Memory with `uv` on all platforms and configures its local OpenCode MCP server
-- installs Node.js LTS via Vite+ `vp` and the latest Go release via `goenv` on macOS
-- applies selected macOS defaults during the macOS install flow
-- symlinks managed files from `home/` into `$HOME`
-- installs Oh My Zsh plus custom plugin repos on macOS, and keeps Ubuntu on a lighter Zsh setup
-- prompts for Git name/email and writes them to `~/.gitconfig.local`
-- syncs 1Password Environment variables into a local `~/.secrets/tokens` file on demand
-- backs up conflicting files into `~/.dotfiles-backups/<timestamp>/`
+The installer is a small Bash shim plus a Bun/TypeScript CLI. Bash remains only where it is useful for fresh-machine bootstrap and OS package-manager work; installer planning, command parsing, profile selection, dotfile linking, and Git identity setup live in `src/install.ts`.
 
-## Usage
+## Install a new machine
 
-Fresh machine bootstrap:
+Personal machine, default profile:
 
 ```sh
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/ovidiup13/dotfiles/main/bootstrap)"
 ```
 
-Fresh machine bootstrap for the remote macOS profile:
+Worker machine:
 
 ```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/ovidiup13/dotfiles/main/bootstrap)" -- --macos-profile remote
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ovidiup13/dotfiles/main/bootstrap)" -- --profile worker
 ```
 
-The bootstrap script installs the minimum prerequisites needed to clone the repo into `~/.dotfiles`, then hands off to `~/.dotfiles/install`.
+The bootstrap script installs only the minimum prerequisites required to clone or update the repo at `~/.dotfiles`, then hands off to `~/.dotfiles/install`.
 
-## macOS profiles
+## Profiles
 
-macOS installs support two profiles:
+Two profile names are supported:
 
-- `main`, the default profile. This is the full local-machine setup driven by `.macos`, with the standard macOS Brewfile, Mac App Store apps, defaults, and the main-only app installers such as Tailscale, Ollama, and Boring Notch.
-- `remote`, the CLI and devtools profile. This is driven by a separate `.macos-remote` installer, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, macOS post-link skills sync, and Oh My OpenAgent, while skipping the main-only app-style installs and macOS defaults flow.
+- `personal`: full local workstation setup. On macOS this includes shared CLI tools, runtimes, shell setup, GUI apps, Mac App Store apps, macOS defaults, and personal-only installers such as Tailscale, Ollama, and Boring Notch.
+- `worker`: CLI/devtools setup for remote or disposable machines. On macOS this uses the lighter worker package path and skips personal-only GUI/defaults work.
 
-If you don't pass `--macos-profile`, the installer uses `main` for backward compatibility.
-
-Use a specific profile on macOS with either entrypoint:
+Use `--profile` everywhere:
 
 ```sh
-./install --macos-profile remote
-./bootstrap --macos-profile remote
+./install --profile personal
+./install --profile worker
+./install check --profile worker
 ```
 
-Profile-aware behavior on macOS:
-
-- full `./install` uses `.macos` for the `main` profile, `.macos-remote` for the `remote` profile, and still uses `.macos` for the post-link stage it triggers afterward
-- `./install --skills` accepts `--macos-profile remote|main` and forwards it to `.macos --post-link`
-- `./install --macos-defaults` accepts `--macos-profile`, but only `main` is allowed
-- `./.macos --post-link` accepts `--macos-profile remote|main`
-- `./.macos --defaults` accepts `--macos-profile`, but rejects `remote`
-
-For unattended installs, set `DOTFILES_GIT_NAME` and `DOTFILES_GIT_EMAIL` before running the installer.
-
-To re-run the macOS post-link tasks later, use:
+## Installer commands
 
 ```sh
-./install --skills --macos-profile main
+./install                 # full install, re-apply, or upgrade path
+./install apply           # same as ./install
+./install check           # show detected platform, architecture, profile, and plan
+./install doctor          # same as check
+./install link            # re-link files from home/ into $HOME
+./install secrets         # sync 1Password Environment secrets
+./install skills          # run macOS post-link skills and agent setup
+./install macos-defaults  # apply macOS defaults; personal profile only
 ```
 
-To re-apply only the macOS defaults later, use:
+`--dry-run` prints dispatcher-level commands and link operations without applying them:
 
 ```sh
-./install --macos-defaults --macos-profile main
+./install --dry-run --profile worker
+./install link --dry-run
+./install skills --dry-run --profile worker
 ```
 
-`./install --macos-defaults --macos-profile remote` is rejected because the defaults flow is main-only.
+## Configuration
 
-## Secrets
+Flags override environment variables. Common environment variables:
 
-Secrets are managed outside the repository with 1Password Environments. The checked-in shell environment file sources `~/.secrets/tokens` when it exists, but that file is generated locally and must not be committed.
+| Variable | Purpose |
+| --- | --- |
+| `DOTFILES_PROFILE` | Default profile: `personal` or `worker` |
+| `DOTFILES_PLATFORM` | Platform override for planning: `auto`, `macos`, `ubuntu`, `linux`, or `windows` |
+| `DOTFILES_DRY_RUN` | Set to `1`, `true`, `yes`, or `on` to enable dry-run |
+| `DOTFILES_GIT_NAME` | Noninteractive Git `user.name` for `~/.gitconfig.local` |
+| `DOTFILES_GIT_EMAIL` | Noninteractive Git `user.email` for `~/.gitconfig.local` |
+| `DOTFILES_1PASSWORD_ENVIRONMENT` | 1Password Environment ID for secrets sync |
+| `DOTFILES_SKILLS_AGENTS` | Space-separated Skills CLI agent targets; default is `universal opencode` |
 
-On the first `./install` or `./install --secrets` run, if `~/.secrets/tokens` does not exist and you did not pass an Environment ID, the installer prompts for the 1Password Environment ID interactively. After a successful sync it writes that ID into `~/.secrets/tokens` as `DOTFILES_1PASSWORD_ENVIRONMENT=...`, so later installs can reuse it automatically.
-
-You can still provide the Environment ID explicitly with either an environment variable:
-
-```sh
-DOTFILES_1PASSWORD_ENVIRONMENT=<environment-id> ./install --secrets
-```
-
-or an explicit flag:
-
-```sh
-./install --secrets --1password-environment <environment-id>
-```
-
-The secrets sync requires the `op` CLI to be installed and authenticated. It writes `DOTFILES_1PASSWORD_ENVIRONMENT=<environment-id>` plus all variables returned by `op environment read <environment-id>` to `~/.secrets/tokens`, sets `~/.secrets` to mode `700`, and sets the generated file to mode `600`. The generated file is plaintext on disk and is sourced by new shells, so exported secrets are available to child processes in those shells.
-
-Full `./install` now runs the secrets sync automatically after package setup and dotfile linking. The prompt only appears if `DOTFILES_1PASSWORD_ENVIRONMENT` is missing from the generated secrets file and you did not provide it explicitly.
-
-## OpenCode
-
-The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
-
-The macOS post-link flow also installs Oh My OpenAgent with `bunx oh-my-openagent install --no-tui --skip-auth`. The checked-in `~/.config/opencode/opencode.json` includes `oh-my-openagent@latest`, so `opencode` always loads the plugin. You can still override provider flags during install with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, `DOTFILES_OMO_OPENCODE_GO`, `DOTFILES_OMO_KIMI_FOR_CODING`, and `DOTFILES_OMO_VERCEL_AI_GATEWAY`.
-
-After linking the dotfiles on either macOS or Linux:
-
-- `opencode` runs with `oh-my-openagent@latest`
-- `opencode` connects to Basic Memory through `uvx basic-memory mcp`
-
-If you already cloned the repo, you can still run the local installer directly:
+Example unattended install:
 
 ```sh
-git clone <your-repo-url> ~/.dotfiles
-cd ~/.dotfiles
+DOTFILES_PROFILE=worker \
+DOTFILES_GIT_NAME="Your Name" \
+DOTFILES_GIT_EMAIL="you@example.com" \
 ./install
 ```
 
-## Layout
+## What gets installed
 
-- `install` is the main entrypoint
-- `.macos` handles the main macOS workstation install and shared macOS maintenance modes
-- `.macos-remote` handles the remote macOS CLI/devtools install
-- `scripts/install/secrets.sh` syncs 1Password Environment variables to the local secrets file
-- `scripts/install/macos_common.sh` contains shared macOS installer helpers used by both macOS entrypoints
-- `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
-- `scripts/install/oh_my_opencode.sh` installs and verifies Oh My OpenAgent during the macOS post-link stage
-- `packages/macos/skills.txt` lists exact Skills CLI installs as `<source> <skill>` on macOS
-- `.ubuntu` handles Ubuntu prerequisites and apt installs
-- `home/` contains the files that get symlinked into `$HOME`
-- `scripts/lib/` contains shared installer helpers
+All profiles:
 
-## Development Notes
+- platform prerequisites
+- shared CLI packages from `packages/base/Brewfile` on macOS or `packages/ubuntu/apt.txt` on Ubuntu-style systems
+- `uv`
+- Basic Memory via `uv`
+- shell configuration and managed dotfiles from `home/`
+- local Git identity in `~/.gitconfig.local` when configured
+- 1Password Environment secrets in `~/.secrets/tokens` when synced
 
-- validate edited shell scripts with `bash -n path/to/script`
-- common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .macos-remote`, `bash -n .ubuntu`, `bash -n scripts/install/macos_common.sh`, `bash -n scripts/install/oh_my_opencode.sh`, `bash -n scripts/install/skills.sh`
-- rerun the macOS post-link flow with `./install --skills --macos-profile main` or `./install --skills --macos-profile remote`
-- rerun only the macOS defaults flow with `./install --macos-defaults --macos-profile main`
-- smoke test the operator-facing macOS flow with `./install --macos-profile remote` and `./install --macos-profile main`
-- smoke test the Ubuntu path with `./.ubuntu`
-- keep `packages/macos/skills.txt` entries to one exact `<source> <skill>` mapping per line
-- prefer small, idempotent shell changes that preserve the existing `log_step`/`log_info`/`log_warn`/`log_error`/`log_success` output style
+macOS `personal`:
 
-## Validation matrix
+- `packages/macos/Brewfile`
+- `packages/macos/Brewfile.mas`
+- GUI apps, fonts, and local workstation tools
+- macOS defaults
+- personal-only app installers such as Tailscale, Ollama, and Boring Notch
+
+macOS `worker`:
+
+- `packages/macos/Brewfile.remote`
+- shared runtimes and shell setup
+- GitHub SSH key setup
+- macOS post-link Skills and OpenCode agent setup
+
+Ubuntu-style Linux:
+
+- apt packages from `packages/ubuntu/apt.txt`
+- Ubuntu runtime and shell setup
+- Tailscale via the upstream install path
+
+Windows is recognized by the CLI planning layer but does not have an install provider yet.
+
+## Secrets
+
+Secrets are managed outside the repository with 1Password Environments.
+
+```sh
+./install secrets --1password-environment <environment-id>
+```
+
+Or with an environment variable:
+
+```sh
+DOTFILES_1PASSWORD_ENVIRONMENT=<environment-id> ./install secrets
+```
+
+The secrets sync requires the `op` CLI to be installed and authenticated. It writes `DOTFILES_1PASSWORD_ENVIRONMENT=<environment-id>` plus variables returned by `op environment read <environment-id>` to `~/.secrets/tokens`, sets `~/.secrets` to mode `700`, and sets the generated file to mode `600`.
+
+Full `./install` runs secrets sync after package setup and dotfile linking. If no Environment ID is available, it prompts interactively.
+
+## Dotfile linking
+
+Files under `home/` are linked into `$HOME` by `./install link` or the full install path.
+
+Existing non-managed targets are moved to:
+
+```text
+~/.dotfiles-backups/<timestamp>/
+```
+
+Then the managed symlink is created.
+
+## OpenCode and Skills
+
+On macOS, the post-link flow:
+
+- syncs exact Skills CLI entries from `packages/macos/skills.txt`
+- removes unmanaged global skills
+- installs Oh My OpenAgent with `bunx oh-my-openagent install --no-tui --skip-auth`
+- verifies the local OpenCode setup
+
+Run it directly with:
+
+```sh
+./install skills --profile personal
+./install skills --profile worker
+```
+
+After linking, `opencode` loads `oh-my-openagent@latest` from the checked-in config and connects to Basic Memory through `uvx basic-memory mcp`.
+
+## Repository layout
+
+```text
+bootstrap                  fresh-machine shell bootstrap
+install                    Bash shim that ensures Bun and runs src/install.ts
+src/install.ts             installer CLI, planning, linking, Git identity, orchestration
+.macos                     macOS personal setup and shared macOS maintenance modes
+.macos-remote              macOS worker setup
+.ubuntu                    Ubuntu-style setup
+scripts/lib/               shared shell helpers
+scripts/install/           platform and integration provider scripts
+packages/base/Brewfile     shared Homebrew packages
+packages/macos/            macOS package manifests and skills manifest
+packages/ubuntu/apt.txt    Ubuntu package manifest
+home/                      managed files linked into $HOME
+```
+
+## Development and validation
 
 Shell syntax checks:
 
@@ -150,95 +191,43 @@ Shell syntax checks:
 bash -n install
 bash -n bootstrap
 bash -n .macos
+bash -n .macos-remote
+bash -n .ubuntu
 bash -n scripts/install/skills.sh
-bash -n scripts/install/oh_my_opencode.sh
+bash -n scripts/install/secrets.sh
 ```
 
-Focused smoke tests for the operator-facing macOS profile parser and guards:
+TypeScript CLI check:
 
 ```sh
-python3 - <<'PY'
-import os, tempfile, subprocess, pathlib
-
-repo = pathlib.Path.cwd()
-
-def write_exec(path, content):
-    path.write_text(content)
-    path.chmod(0o755)
-
-def run_case(name, argv, brew_exit_target=None, extra_stubs=None, setup=None):
-    case_dir = pathlib.Path(tempfile.mkdtemp(prefix=f"dotfiles-{name}-"))
-    stub_dir = case_dir / "stubs"
-    home_dir = case_dir / "home"
-    stub_dir.mkdir()
-    home_dir.mkdir()
-
-    write_exec(stub_dir / "uname", '#!/bin/sh\nprintf "Darwin\\n"\n')
-    write_exec(stub_dir / "xcode-select", '#!/bin/sh\nif [ "$1" = "-p" ]; then printf "/Library/Developer/CommandLineTools\\n"; exit 0; fi\nexit 0\n')
-
-    brew_script = '#!/bin/sh\nif [ "$1" = "shellenv" ]; then exit 0; fi\n'
-    if brew_exit_target:
-        brew_script += f'if [ "$1" = "bundle" ] && [ "$3" = "{brew_exit_target}" ]; then exit 99; fi\n'
-    brew_script += 'exit 0\n'
-    write_exec(stub_dir / "brew", brew_script)
-
-    if extra_stubs:
-      extra_stubs(stub_dir)
-
-    if setup:
-      setup(home_dir)
-
-    env = {
-        "HOME": str(home_dir),
-        "PATH": f"{stub_dir}:/usr/bin:/bin:/usr/sbin:/sbin",
-        "DOTFILES_SUDO_ACTIVE": "1",
-    }
-    return subprocess.run(argv, cwd=repo, env=env, text=True, capture_output=True)
-
-main_result = run_case(
-    "main",
-    ["./install", "--macos-profile", "main"],
-    brew_exit_target=f"{repo}/packages/macos/Brewfile",
-)
-print(main_result.stdout + main_result.stderr, end="")
-assert main_result.returncode == 99
-
-remote_result = run_case(
-    "remote",
-    ["./install", "--macos-profile", "remote"],
-    brew_exit_target=f"{repo}/packages/macos/Brewfile.remote",
-)
-print(remote_result.stdout + remote_result.stderr, end="")
-assert remote_result.returncode == 99
-
-def post_link_stubs(stub_dir):
-    write_exec(stub_dir / "skills", '#!/bin/sh\nif [ "$1" = "list" ]; then printf "[]\\n"; exit 0; fi\nexit 0\n')
-    write_exec(stub_dir / "opencode", '#!/bin/sh\nexit 0\n')
-    write_exec(stub_dir / "bunx", '#!/bin/sh\nexit 0\n')
-
-def post_link_setup(home_dir):
-    config_dir = home_dir / ".config" / "opencode"
-    config_dir.mkdir(parents=True)
-    (config_dir / "opencode.json").write_text("{}\n")
-
-post_link_result = run_case(
-    "post-link",
-    ["./install", "--skills", "--macos-profile", "remote"],
-    extra_stubs=post_link_stubs,
-    setup=post_link_setup,
-)
-print(post_link_result.stdout + post_link_result.stderr, end="")
-assert post_link_result.returncode == 0
-PY
-
-./install --macos-profile invalid
-./install --macos-defaults --macos-profile remote
+bun build src/install.ts --target bun --outfile /tmp/dotfiles-install-check.js
 ```
 
-The successful smoke cases use temporary PATH stubs and a temporary HOME so they stop at the profile dispatch points without touching the real machine state, while proving the `./install` entrypoint rather than direct `.macos` execution.
+Non-mutating smoke checks:
+
+```sh
+./install --help
+./install check
+./install check --profile worker
+./install check --platform ubuntu --profile worker
+./install --dry-run --profile worker
+./install link --dry-run
+./install secrets --dry-run --1password-environment env-test
+./install skills --dry-run --profile worker
+./install macos-defaults --dry-run --profile personal
+```
+
+Expected guard failures:
+
+```sh
+./install check --profile invalid
+./install macos-defaults --dry-run --profile worker
+```
 
 ## Notes
 
-- macOS App Store installs run only when `mas` is signed in
-- rerunning `./install` is safe
-- `yadm` is no longer part of the install flow
+- Re-running `./install` is intended to be safe and idempotent.
+- The CLI accepts only `personal` and `worker` profiles.
+- Old compatibility flags and profile names are intentionally unsupported.
+- macOS App Store installs run only when `mas` is available and signed in.
+- ADRs for the installer runtime and command contract are stored in the notes project under `adr/`.

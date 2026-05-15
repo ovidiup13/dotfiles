@@ -8,13 +8,14 @@ Agents working here should optimize for safe, repeatable shell-script changes.
 The main workflows are:
 - bootstrap a new machine with `bootstrap`
 - run the full installer with `./install`
-- run macOS-only post-link skill sync with `./install --skills`
+- run macOS-only post-link skill sync with `./install skills`
 - manage symlinked files under `home/`
 
 ## Repository Layout
 
-- `install` is the main entrypoint
 - `bootstrap` installs prerequisites, clones or updates the repo, then runs `install`
+- `install` is a Bash compatibility shim that ensures Bun and delegates to `src/install.ts`
+- `src/install.ts` owns CLI parsing, platform/profile planning, dotfile linking, and Git identity setup
 - `.macos` handles macOS setup, Homebrew packages, runtimes, shell tooling, and skills sync
 - `.ubuntu` handles Ubuntu package setup and shell prerequisites
 - `scripts/lib/` contains shared helpers
@@ -42,8 +43,11 @@ Validation is mostly shell syntax checking plus targeted smoke tests.
 ### Primary Commands
 
 - Full install: `./install`
-- macOS skills sync only: `./install --skills`
-- 1Password secrets sync only: `./install --secrets`
+- Installer plan only: `./install check`
+- Installer dry run: `./install --dry-run`
+- Dotfile relink only: `./install link`
+- macOS skills sync only: `./install skills`
+- 1Password secrets sync only: `./install secrets`
 - Bootstrap flow: `./bootstrap`
 - macOS setup directly: `./.macos`
 - macOS post-link skills sync: `./.macos --post-link`
@@ -54,6 +58,7 @@ Validation is mostly shell syntax checking plus targeted smoke tests.
 Use `bash -n` for any shell file you edit.
 
 - Main installer: `bash -n install`
+- TypeScript installer CLI: `bun run src/install.ts --help`
 - Bootstrap script: `bash -n bootstrap`
 - macOS installer: `bash -n .macos`
 - Ubuntu installer: `bash -n .ubuntu`
@@ -66,15 +71,15 @@ Use `bash -n` for any shell file you edit.
 There is no single-test framework, so the closest equivalent is validating one script at a time.
 
 - Validate one edited script: `bash -n path/to/file.sh`
-- Smoke test one installer path: `./install --skills`
-- Smoke test 1Password secrets sync with a stubbed `op`: `./install --secrets`
+- Smoke test one installer path: `./install skills`
+- Smoke test 1Password secrets sync with a stubbed `op`: `./install secrets`
 - Smoke test macOS post-link stage only: `./.macos --post-link`
 - Smoke test Ubuntu path only: `./.ubuntu`
 
 ### Helpful Focused Checks
 
-- Verify installed skills manifest behavior: `./install --skills`
-- Verify 1Password Environment sync behavior: `./install --secrets`
+- Verify installed skills manifest behavior: `./install skills`
+- Verify 1Password Environment sync behavior: `./install secrets`
 - Verify skill manifest format manually: inspect `packages/macos/skills.txt`
 - Verify apt package list changes: inspect `packages/ubuntu/apt.txt`
 - Verify Brew package list changes: inspect `packages/base/Brewfile` and `packages/macos/Brewfile`
@@ -199,8 +204,8 @@ Do not assume they are installed unless you verify first.
 ## Recommended Verification After Common Changes
 
 - Installer logic change: `bash -n install && bash -n .macos && bash -n .ubuntu`
-- Skills logic change: `bash -n scripts/install/skills.sh && ./install --skills`
-- Secrets logic change: `bash -n scripts/install/secrets.sh && ./install --secrets`
+- Skills logic change: `bash -n scripts/install/skills.sh && ./install skills`
+- Secrets logic change: `bash -n scripts/install/secrets.sh && ./install secrets`
 - Bootstrap logic change: `bash -n bootstrap`
 - Symlink behavior change: `bash -n scripts/lib/symlink.sh` and inspect `home/` targets carefully
 
