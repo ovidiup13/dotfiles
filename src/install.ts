@@ -469,6 +469,15 @@ async function configureGitIdentity(options: Options): Promise<void> {
     }
   }
 
+  if (options.dryRun) {
+    if (gitName && gitEmail) {
+      logInfo(`[dry-run] write Git identity to ${identityFile}`);
+    } else {
+      logInfo("[dry-run] skip Git identity prompt");
+    }
+    return;
+  }
+
   if ((!gitName || !gitEmail) && process.stdin.isTTY && process.stdout.isTTY) {
     logStep("Configuring Git identity");
     const readline = createInterface({ input: process.stdin, output: process.stdout });
@@ -484,11 +493,6 @@ async function configureGitIdentity(options: Options): Promise<void> {
 
   if (!gitName || !gitEmail) {
     logWarn("Skipping Git identity setup. Set DOTFILES_GIT_NAME and DOTFILES_GIT_EMAIL or configure git globally.");
-    return;
-  }
-
-  if (options.dryRun) {
-    logInfo(`[dry-run] write Git identity to ${identityFile}`);
     return;
   }
 
