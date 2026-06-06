@@ -8,7 +8,6 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - requests `sudo` once and keeps the session alive while the install runs
 - installs platform prerequisites and packages
 - installs macOS agent skills listed in `packages/macos/skills.txt`
-- installs Oh My OpenAgent during the macOS post-link flow and verifies it with `doctor`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
 - installs `uv` from Astral on all platforms
 - installs Basic Memory with `uv` on all platforms and configures its local OpenCode MCP server
@@ -41,7 +40,7 @@ The bootstrap script installs the minimum prerequisites needed to clone the repo
 macOS installs support two profiles:
 
 - `main`, the default profile. This is the full local-machine setup driven by `.macos`, with the standard macOS Brewfile, Mac App Store apps, defaults, and the main-only app installers such as Tailscale, Ollama, and Boring Notch.
-- `remote`, the CLI and devtools profile. This is driven by a separate `.macos-remote` installer, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, macOS post-link skills sync, and Oh My OpenAgent, while skipping the main-only app-style installs and macOS defaults flow.
+- `remote`, the CLI and devtools profile. This is driven by a separate `.macos-remote` installer, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, and macOS post-link skills sync, while skipping the main-only app-style installs and macOS defaults flow.
 
 If you don't pass `--macos-profile`, the installer uses `main` for backward compatibility.
 
@@ -102,11 +101,8 @@ Full `./install` now runs the secrets sync automatically after package setup and
 
 The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
 
-The macOS post-link flow also installs Oh My OpenAgent with `bunx oh-my-openagent install --no-tui --skip-auth`. The checked-in `~/.config/opencode/opencode.json` includes `oh-my-openagent@latest`, so `opencode` always loads the plugin. You can still override provider flags during install with `DOTFILES_OMO_CLAUDE`, `DOTFILES_OMO_OPENAI`, `DOTFILES_OMO_GEMINI`, `DOTFILES_OMO_COPILOT`, `DOTFILES_OMO_OPENCODE_ZEN`, `DOTFILES_OMO_ZAI_CODING_PLAN`, `DOTFILES_OMO_OPENCODE_GO`, `DOTFILES_OMO_KIMI_FOR_CODING`, and `DOTFILES_OMO_VERCEL_AI_GATEWAY`.
-
 After linking the dotfiles on either macOS or Linux:
 
-- `opencode` runs with `oh-my-openagent@latest`
 - `opencode` connects to Basic Memory through `uvx basic-memory mcp`
 
 If you already cloned the repo, you can still run the local installer directly:
@@ -125,7 +121,6 @@ cd ~/.dotfiles
 - `scripts/install/secrets.sh` syncs 1Password Environment variables to the local secrets file
 - `scripts/install/macos_common.sh` contains shared macOS installer helpers used by both macOS entrypoints
 - `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
-- `scripts/install/oh_my_opencode.sh` installs and verifies Oh My OpenAgent during the macOS post-link stage
 - `packages/macos/skills.txt` lists exact Skills CLI installs as `<source> <skill>` on macOS
 - `.ubuntu` handles Ubuntu prerequisites and apt installs
 - `home/` contains the files that get symlinked into `$HOME`
@@ -134,7 +129,7 @@ cd ~/.dotfiles
 ## Development Notes
 
 - validate edited shell scripts with `bash -n path/to/script`
-- common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .macos-remote`, `bash -n .ubuntu`, `bash -n scripts/install/macos_common.sh`, `bash -n scripts/install/oh_my_opencode.sh`, `bash -n scripts/install/skills.sh`
+- common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .macos-remote`, `bash -n .ubuntu`, `bash -n scripts/install/macos_common.sh`, `bash -n scripts/install/skills.sh`
 - rerun the macOS post-link flow with `./install --skills --macos-profile main` or `./install --skills --macos-profile remote`
 - rerun only the macOS defaults flow with `./install --macos-defaults --macos-profile main`
 - smoke test the operator-facing macOS flow with `./install --macos-profile remote` and `./install --macos-profile main`
@@ -151,7 +146,6 @@ bash -n install
 bash -n bootstrap
 bash -n .macos
 bash -n scripts/install/skills.sh
-bash -n scripts/install/oh_my_opencode.sh
 ```
 
 Focused smoke tests for the operator-facing macOS profile parser and guards:
@@ -214,7 +208,6 @@ assert remote_result.returncode == 99
 def post_link_stubs(stub_dir):
     write_exec(stub_dir / "skills", '#!/bin/sh\nif [ "$1" = "list" ]; then printf "[]\\n"; exit 0; fi\nexit 0\n')
     write_exec(stub_dir / "opencode", '#!/bin/sh\nexit 0\n')
-    write_exec(stub_dir / "bunx", '#!/bin/sh\nexit 0\n')
 
 def post_link_setup(home_dir):
     config_dir = home_dir / ".config" / "opencode"
