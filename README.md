@@ -104,6 +104,9 @@ The macOS post-link flow runs the exact skills sync from `packages/macos/skills.
 After linking the dotfiles on either macOS or Linux:
 
 - `opencode` connects to Basic Memory through `uvx basic-memory mcp`
+- `opencode` loads Superpowers from `superpowers@git+https://github.com/obra/superpowers.git` through its native plugin manager
+
+OpenCode loads plugins at startup. After changing `home/.config/opencode/opencode.json`, quit and restart `opencode` so it installs and registers the Superpowers skills.
 
 If you already cloned the repo, you can still run the local installer directly:
 
