@@ -13,8 +13,5 @@
       "type": "remote",
       "url": "{env:HA_MCP_WEBHOOK_URL}"
     }
-  },
-  "plugin": [
-    "oh-my-openagent@latest"
-  ]
+  }
 }
