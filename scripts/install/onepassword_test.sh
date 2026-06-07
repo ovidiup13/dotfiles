@@ -14,3 +14,8 @@ if ! grep -q 'gpg --show-keys' "$script_path"; then
   printf 'missing installed keyring inspection before reuse\n' >&2
   exit 1
 fi
+
+if ! grep -q 'gpg --check-sigs' "$script_path"; then
+  printf 'missing expired keyring signature check before reuse\n' >&2
+  exit 1
+fi

@@ -20,6 +20,7 @@ onepassword_keyring_has_required_key() {
   [ -f "$keyring_path" ] || return 1
 
   sudo gpg --show-keys --with-colons "$keyring_path" 2>/dev/null | grep -q "^fpr:::::::::${required_fingerprint}:"
+  ! sudo gpg --check-sigs "$keyring_path" 2>&1 | grep -qi 'expired'
 }
 
 setup_ubuntu_onepassword_cli_beta_repo() {
