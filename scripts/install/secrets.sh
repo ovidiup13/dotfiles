@@ -62,6 +62,10 @@ resolve_1password_environment_id() {
 ensure_1password_signed_in() {
   local signin_output
 
+  if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+    return
+  fi
+
   if op whoami >/dev/null 2>&1; then
     return
   fi
