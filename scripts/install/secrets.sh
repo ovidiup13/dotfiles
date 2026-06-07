@@ -59,6 +59,22 @@ resolve_1password_environment_id() {
   prompt_for_1password_environment_id
 }
 
+ensure_1password_signed_in() {
+  local signin_output
+
+  if op whoami >/dev/null 2>&1; then
+    return
+  fi
+
+  log_info "Signing in to 1Password CLI"
+  if ! signin_output="$(op signin)"; then
+    log_error "Failed to sign in to 1Password CLI. Run: eval \"\$(op signin)\""
+    exit 1
+  fi
+
+  eval "$signin_output"
+}
+
 sync_1password_secrets() {
   local environment_id="${1:-}"
   local secrets_file="$HOME/$SECRETS_FILE_RELATIVE"
@@ -81,6 +97,8 @@ sync_1password_secrets() {
 
   resolve_1password_environment_id "$environment_id" "$secrets_file"
   environment_id="$RESOLVED_1PASSWORD_ENVIRONMENT_ID"
+
+  ensure_1password_signed_in
 
   tmp_file="$(mktemp "$secrets_dir/tokens.XXXXXX")"
   chmod 600 "$tmp_file"
