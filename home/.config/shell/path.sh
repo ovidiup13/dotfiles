@@ -22,6 +22,8 @@ for dir in \
   "$JENV_ROOT/bin" \
   "$PYENV_ROOT/bin" \
   "$PNPM_HOME" \
+  "$VOLTA_HOME/bin" \
+  "$HOME/.opencode/bin" \
   "$BUN_INSTALL/bin"
 do
   if [ -d "$dir" ]; then
