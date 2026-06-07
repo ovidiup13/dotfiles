@@ -22,7 +22,7 @@ setup_ubuntu_onepassword_cli_beta_repo() {
 
   arch="$(dpkg --print-architecture)"
   repo_url="https://downloads.1password.com/linux/debian/${arch}"
-  key_url="https://downloads.1password.com/linux/keys/op.asc"
+  key_url="https://downloads.1password.com/linux/keys/1password.asc"
   keyring_dir="/usr/share/keyrings"
   keyring_path="${keyring_dir}/1password-archive-keyring.gpg"
   repo_path="/etc/apt/sources.list.d/1password-beta.list"
