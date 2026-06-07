@@ -12,6 +12,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - installs `uv` from Astral on all platforms
 - installs Basic Memory with `uv` on all platforms and configures its local OpenCode MCP server
 - installs Node.js LTS via Vite+ `vp` and the latest Go release via `goenv` on macOS
+- installs monitoring tools on demand with `./install --monitoring`, including the Beszel agent via Homebrew
 - applies selected macOS defaults during the macOS install flow
 - symlinks managed files from `home/` into `$HOME`
 - installs Oh My Zsh plus custom plugin repos on macOS, and keeps Ubuntu on a lighter Zsh setup
@@ -97,6 +98,20 @@ The secrets sync requires the `op` CLI to be installed and authenticated. It wri
 
 Full `./install` now runs the secrets sync automatically after package setup and dotfile linking. The prompt only appears if `DOTFILES_1PASSWORD_ENVIRONMENT` is missing from the generated secrets file and you did not provide it explicitly.
 
+## Monitoring
+
+Run the monitoring-only installer with:
+
+```sh
+./install --monitoring
+```
+
+The monitoring flow installs the Beszel agent on macOS and Ubuntu-style Linux using Homebrew. On Linux, it installs Homebrew first if `brew` is unavailable.
+
+Configuration comes from 1Password Environment variables synced into `~/.secrets/tokens`. Required variables are `BESZEL_KEY`, `BESZEL_TOKEN`, and `BESZEL_HUB_URL`. Run `./install --secrets` first if the local secrets file has not been created.
+
+The installer writes `~/.config/beszel/beszel-agent.env` and the agent listens on port `45876`. If `beszel-agent` is already installed or port `45876` is in use, the flow exits successfully without changing the system.
+
 ## OpenCode
 
 The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
@@ -122,6 +137,7 @@ cd ~/.dotfiles
 - `.macos` handles the main macOS workstation install and shared macOS maintenance modes
 - `.macos-remote` handles the remote macOS CLI/devtools install
 - `scripts/install/secrets.sh` syncs 1Password Environment variables to the local secrets file
+- `scripts/install/monitoring.sh` installs monitoring tools such as the Beszel agent
 - `scripts/install/macos_common.sh` contains shared macOS installer helpers used by both macOS entrypoints
 - `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
 - `packages/macos/skills.txt` lists exact Skills CLI installs as `<source> <skill>` on macOS
@@ -135,6 +151,8 @@ cd ~/.dotfiles
 - common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .macos-remote`, `bash -n .ubuntu`, `bash -n scripts/install/macos_common.sh`, `bash -n scripts/install/skills.sh`
 - rerun the macOS post-link flow with `./install --skills --macos-profile main` or `./install --skills --macos-profile remote`
 - rerun only the macOS defaults flow with `./install --macos-defaults --macos-profile main`
+- rerun only the monitoring flow with `./install --monitoring`
+- validate monitoring changes with `bash -n install && bash -n scripts/install/monitoring.sh`
 - smoke test the operator-facing macOS flow with `./install --macos-profile remote` and `./install --macos-profile main`
 - smoke test the Ubuntu path with `./.ubuntu`
 - keep `packages/macos/skills.txt` entries to one exact `<source> <skill>` mapping per line
@@ -148,6 +166,7 @@ Shell syntax checks:
 bash -n install
 bash -n bootstrap
 bash -n .macos
+bash -n .macos-remote
 bash -n scripts/install/skills.sh
 ```
 

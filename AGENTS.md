@@ -16,11 +16,12 @@ The main workflows are:
 - `install` is the main entrypoint
 - `bootstrap` installs prerequisites, clones or updates the repo, then runs `install`
 - `.macos` handles macOS setup, Homebrew packages, runtimes, shell tooling, and skills sync
+- `.macos-remote` handles the remote macOS CLI/devtools profile
 - `.ubuntu` handles Ubuntu package setup and shell prerequisites
 - `scripts/lib/` contains shared helpers
 - `scripts/install/` contains installer modules
 - `packages/base/Brewfile` contains shared Homebrew packages
-- `packages/macos/Brewfile` and `packages/macos/Brewfile.mas` contain macOS packages
+- `packages/macos/Brewfile`, `packages/macos/Brewfile.remote`, and `packages/macos/Brewfile.mas` contain macOS packages
 - `packages/ubuntu/apt.txt` contains Ubuntu packages
 - `packages/macos/skills.txt` contains exact skill mappings as `<source> <skill>`
 - `home/` contains files that are symlinked into `$HOME`
@@ -44,8 +45,10 @@ Validation is mostly shell syntax checking plus targeted smoke tests.
 - Full install: `./install`
 - macOS skills sync only: `./install --skills`
 - 1Password secrets sync only: `./install --secrets`
+- Monitoring tools only: `./install --monitoring`
 - Bootstrap flow: `./bootstrap`
 - macOS setup directly: `./.macos`
+- remote macOS setup directly: `./.macos-remote`
 - macOS post-link skills sync: `./.macos --post-link`
 - Ubuntu setup directly: `./.ubuntu`
 
@@ -56,10 +59,12 @@ Use `bash -n` for any shell file you edit.
 - Main installer: `bash -n install`
 - Bootstrap script: `bash -n bootstrap`
 - macOS installer: `bash -n .macos`
+- remote macOS installer: `bash -n .macos-remote`
 - Ubuntu installer: `bash -n .ubuntu`
 - Shared library: `bash -n scripts/lib/common.sh`
 - Skills installer: `bash -n scripts/install/skills.sh`
 - Secrets installer: `bash -n scripts/install/secrets.sh`
+- Monitoring installer: `bash -n scripts/install/monitoring.sh`
 
 ### Single-File / Single-Target Validation
 
@@ -68,6 +73,7 @@ There is no single-test framework, so the closest equivalent is validating one s
 - Validate one edited script: `bash -n path/to/file.sh`
 - Smoke test one installer path: `./install --skills`
 - Smoke test 1Password secrets sync with a stubbed `op`: `./install --secrets`
+- Verify monitoring installer behavior: `./install --monitoring`
 - Smoke test macOS post-link stage only: `./.macos --post-link`
 - Smoke test Ubuntu path only: `./.ubuntu`
 
@@ -77,7 +83,7 @@ There is no single-test framework, so the closest equivalent is validating one s
 - Verify 1Password Environment sync behavior: `./install --secrets`
 - Verify skill manifest format manually: inspect `packages/macos/skills.txt`
 - Verify apt package list changes: inspect `packages/ubuntu/apt.txt`
-- Verify Brew package list changes: inspect `packages/base/Brewfile` and `packages/macos/Brewfile`
+- Verify Brew package list changes: inspect `packages/base/Brewfile`, `packages/macos/Brewfile`, and `packages/macos/Brewfile.remote`
 
 ### Optional External Tools
 
@@ -198,9 +204,10 @@ Do not assume they are installed unless you verify first.
 
 ## Recommended Verification After Common Changes
 
-- Installer logic change: `bash -n install && bash -n .macos && bash -n .ubuntu`
+- Installer logic change: `bash -n install && bash -n .macos && bash -n .macos-remote && bash -n .ubuntu`
 - Skills logic change: `bash -n scripts/install/skills.sh && ./install --skills`
 - Secrets logic change: `bash -n scripts/install/secrets.sh && ./install --secrets`
+- Monitoring logic change: `bash -n scripts/install/monitoring.sh && ./install --monitoring`
 - Bootstrap logic change: `bash -n bootstrap`
 - Symlink behavior change: `bash -n scripts/lib/symlink.sh` and inspect `home/` targets carefully
 
