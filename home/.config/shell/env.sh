@@ -11,6 +11,7 @@ export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
 export GEM_HOME="${GEM_HOME:-$HOME/.gem}"
 export JENV_ROOT="${JENV_ROOT:-$HOME/.jenv}"
 export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+export VOLTA_HOME="${VOLTA_HOME:-$HOME/.volta}"
 
 case "$(uname -s)" in
   Darwin)

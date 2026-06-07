@@ -14,6 +14,10 @@ install_macos_runtimes() {
 install_ubuntu_runtimes() {
   install_uv
   install_basic_memory
+  install_bun
+  install_volta
+  install_node_lts_with_volta
+  install_opencode
 }
 
 load_uv_env() {
@@ -56,6 +60,104 @@ install_basic_memory() {
 
   log_step "Installing Basic Memory with uv"
   uv tool install basic-memory
+}
+
+load_bun_env() {
+  export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+  if [ -d "$BUN_INSTALL/bin" ]; then
+    PATH="$BUN_INSTALL/bin:$PATH"
+  fi
+}
+
+install_bun() {
+  load_bun_env
+
+  if command_exists bun; then
+    return 0
+  fi
+
+  if ! command_exists curl; then
+    log_warn "Skipping Bun setup because curl is not installed."
+    return 1
+  fi
+
+  log_step "Installing Bun"
+  curl -fsSL https://bun.sh/install | bash
+  load_bun_env
+
+  if ! command_exists bun; then
+    log_warn "Bun was installed but is not available in this shell."
+    return 1
+  fi
+}
+
+load_volta_env() {
+  export VOLTA_HOME="${VOLTA_HOME:-$HOME/.volta}"
+  if [ -d "$VOLTA_HOME/bin" ]; then
+    PATH="$VOLTA_HOME/bin:$PATH"
+  fi
+}
+
+install_volta() {
+  load_volta_env
+
+  if command_exists volta; then
+    return 0
+  fi
+
+  if ! command_exists curl; then
+    log_warn "Skipping Volta setup because curl is not installed."
+    return 1
+  fi
+
+  log_step "Installing Volta"
+  curl -fsSL https://get.volta.sh | bash -s -- --skip-setup
+  load_volta_env
+
+  if ! command_exists volta; then
+    log_warn "Volta was installed but is not available in this shell."
+    return 1
+  fi
+}
+
+install_node_lts_with_volta() {
+  if ! install_volta; then
+    log_warn "Skipping Node.js LTS setup because Volta is not available."
+    return 1
+  fi
+
+  load_volta_env
+
+  log_step "Installing Node.js LTS with Volta"
+  volta install node@lts
+}
+
+load_opencode_env() {
+  if [ -d "$HOME/.opencode/bin" ]; then
+    PATH="$HOME/.opencode/bin:$PATH"
+  fi
+}
+
+install_opencode() {
+  load_opencode_env
+
+  if command_exists opencode; then
+    return 0
+  fi
+
+  if ! command_exists curl; then
+    log_warn "Skipping opencode setup because curl is not installed."
+    return 1
+  fi
+
+  log_step "Installing opencode"
+  curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+  load_opencode_env
+
+  if ! command_exists opencode; then
+    log_warn "opencode was installed but is not available in this shell."
+    return 1
+  fi
 }
 
 install_vp_cli() {
