@@ -24,6 +24,16 @@ if ! grep -q 'VOLTA_HOME' "$env_path"; then
   exit 1
 fi
 
+if awk '/^load_bun_env\(\)/,/^}/ { print }' "$script_path" | grep -q '\[ -d "\$BUN_INSTALL/bin" \]'; then
+  printf 'Bun PATH setup must not depend on the bin directory existing first\n' >&2
+  exit 1
+fi
+
+if ! awk '/^load_bun_env\(\)/,/^}/ { print }' "$script_path" | grep -q 'PATH="\$BUN_INSTALL/bin:\$PATH"'; then
+  printf 'missing unconditional Bun PATH setup\n' >&2
+  exit 1
+fi
+
 for path_entry in \
   '\$VOLTA_HOME/bin' \
   '\$HOME/.opencode/bin'

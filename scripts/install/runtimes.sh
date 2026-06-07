@@ -64,9 +64,7 @@ install_basic_memory() {
 
 load_bun_env() {
   export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
-  if [ -d "$BUN_INSTALL/bin" ]; then
-    PATH="$BUN_INSTALL/bin:$PATH"
-  fi
+  PATH="$BUN_INSTALL/bin:$PATH"
 }
 
 install_bun() {
