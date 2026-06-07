@@ -59,10 +59,54 @@ resolve_1password_environment_id() {
   prompt_for_1password_environment_id
 }
 
+ensure_1password_signed_in() {
+  local signin_output
+
+  if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+    return
+  fi
+
+  if op whoami >/dev/null 2>&1; then
+    return
+  fi
+
+  log_info "Signing in to 1Password CLI"
+  if ! signin_output="$(op signin)"; then
+    log_error "Failed to sign in to 1Password CLI. Run: eval \"\$(op signin)\""
+    exit 1
+  fi
+
+  eval "$signin_output"
+}
+
+write_quoted_environment() {
+  local line
+  local name
+  local value
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    name="${line%%=*}"
+    value="${line#*=}"
+
+    if [ -z "$name" ] || [ "$name" = "$line" ]; then
+      printf '%s\n' "$line"
+      continue
+    fi
+
+    value="${value//\\/\\\\}"
+    value="${value//\"/\\\"}"
+    value="${value//\$/\\\$}"
+    value="${value//\`/\\\`}"
+
+    printf '%s="%s"\n' "$name" "$value"
+  done
+}
+
 sync_1password_secrets() {
   local environment_id="${1:-}"
   local secrets_file="$HOME/$SECRETS_FILE_RELATIVE"
   local secrets_dir
+  local environment_output
   local tmp_file
 
   if ! command_exists op; then
@@ -82,16 +126,22 @@ sync_1password_secrets() {
   resolve_1password_environment_id "$environment_id" "$secrets_file"
   environment_id="$RESOLVED_1PASSWORD_ENVIRONMENT_ID"
 
+  ensure_1password_signed_in
+
   tmp_file="$(mktemp "$secrets_dir/tokens.XXXXXX")"
   chmod 600 "$tmp_file"
   trap 'rm -f "$tmp_file"' EXIT HUP INT TERM
 
   printf 'DOTFILES_1PASSWORD_ENVIRONMENT=%s\n' "$environment_id" > "$tmp_file"
 
-  if ! op environment read "$environment_id" >> "$tmp_file"; then
+  if ! environment_output="$(op environment read "$environment_id")"; then
     rm -f "$tmp_file"
     log_error "Failed to read 1Password Environment: $environment_id"
     exit 1
+  fi
+
+  if [ -n "$environment_output" ]; then
+    printf '%s\n' "$environment_output" | write_quoted_environment >> "$tmp_file"
   fi
 
   if [ "$(wc -l < "$tmp_file")" -le 1 ]; then
