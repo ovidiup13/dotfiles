@@ -13,8 +13,17 @@ ensure_ubuntu_onepassword_repo_prereqs() {
   sudo apt-get install -y ca-certificates curl gnupg
 }
 
+onepassword_keyring_has_required_key() {
+  local keyring_path="$1"
+  local required_fingerprint="$2"
+
+  [ -f "$keyring_path" ] || return 1
+
+  sudo gpg --show-keys --with-colons "$keyring_path" 2>/dev/null | grep -q "^fpr:::::::::${required_fingerprint}:"
+}
+
 setup_ubuntu_onepassword_cli_beta_repo() {
-  local arch repo_url key_url keyring_dir keyring_path repo_path prefs_dir prefs_path repo_line
+  local arch repo_url key_url key_fingerprint keyring_dir keyring_path repo_path prefs_dir prefs_path repo_line
 
   if [ "$(detect_platform)" != "ubuntu" ]; then
     return
@@ -23,6 +32,7 @@ setup_ubuntu_onepassword_cli_beta_repo() {
   arch="$(dpkg --print-architecture)"
   repo_url="https://downloads.1password.com/linux/debian/${arch}"
   key_url="https://downloads.1password.com/linux/keys/1password.asc"
+  key_fingerprint="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
   keyring_dir="/usr/share/keyrings"
   keyring_path="${keyring_dir}/1password-archive-keyring.gpg"
   repo_path="/etc/apt/sources.list.d/1password-beta.list"
@@ -32,12 +42,17 @@ setup_ubuntu_onepassword_cli_beta_repo() {
 
   ensure_ubuntu_onepassword_repo_prereqs
 
-  if [ ! -f "$keyring_path" ]; then
+  if onepassword_keyring_has_required_key "$keyring_path" "$key_fingerprint"; then
+    log_info "1Password archive keyring already installed"
+  else
     log_step "Installing 1Password archive keyring"
     sudo mkdir -p "$keyring_dir"
-    curl -fsSL "$key_url" | sudo gpg --dearmor -o "$keyring_path"
-  else
-    log_info "1Password archive keyring already installed"
+    curl -fsSL "$key_url" | sudo gpg --batch --yes --dearmor -o "$keyring_path"
+
+    if ! onepassword_keyring_has_required_key "$keyring_path" "$key_fingerprint"; then
+      log_error "Installed 1Password archive keyring is missing the expected signing key."
+      exit 1
+    fi
   fi
 
   if [ -f "$repo_path" ] && [ "$(sudo cat "$repo_path")" = "$repo_line" ]; then
