@@ -18,6 +18,7 @@ fi
 
 BESZEL_AGENT_PORT="45876"
 BESZEL_AGENT_ENV_FILE_RELATIVE=".config/beszel/beszel-agent.env"
+BESZEL_AGENT_CACHE_DIR_RELATIVE=".cache/beszel"
 
 beszel_agent_installed() {
   command_exists beszel-agent
@@ -143,6 +144,13 @@ write_beszel_agent_env() {
   chmod 600 "$env_file"
 }
 
+ensure_beszel_agent_directories() {
+  local cache_dir="$HOME/$BESZEL_AGENT_CACHE_DIR_RELATIVE"
+
+  mkdir -p "$cache_dir"
+  chmod 700 "$cache_dir"
+}
+
 install_beszel_agent_with_brew() {
   ensure_homebrew
 
@@ -189,6 +197,7 @@ install_monitoring_tools() {
   require_beszel_environment
   install_beszel_agent_with_brew
   write_beszel_agent_env
+  ensure_beszel_agent_directories
   start_beszel_agent_service
   log_success "Monitoring tools installed"
 }
