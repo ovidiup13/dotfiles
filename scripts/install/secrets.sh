@@ -75,10 +75,34 @@ ensure_1password_signed_in() {
   eval "$signin_output"
 }
 
+write_quoted_environment() {
+  local line
+  local name
+  local value
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    name="${line%%=*}"
+    value="${line#*=}"
+
+    if [ -z "$name" ] || [ "$name" = "$line" ]; then
+      printf '%s\n' "$line"
+      continue
+    fi
+
+    value="${value//\\/\\\\}"
+    value="${value//\"/\\\"}"
+    value="${value//\$/\\\$}"
+    value="${value//\`/\\\`}"
+
+    printf '%s="%s"\n' "$name" "$value"
+  done
+}
+
 sync_1password_secrets() {
   local environment_id="${1:-}"
   local secrets_file="$HOME/$SECRETS_FILE_RELATIVE"
   local secrets_dir
+  local environment_output
   local tmp_file
 
   if ! command_exists op; then
@@ -106,10 +130,14 @@ sync_1password_secrets() {
 
   printf 'DOTFILES_1PASSWORD_ENVIRONMENT=%s\n' "$environment_id" > "$tmp_file"
 
-  if ! op environment read "$environment_id" >> "$tmp_file"; then
+  if ! environment_output="$(op environment read "$environment_id")"; then
     rm -f "$tmp_file"
     log_error "Failed to read 1Password Environment: $environment_id"
     exit 1
+  fi
+
+  if [ -n "$environment_output" ]; then
+    printf '%s\n' "$environment_output" | write_quoted_environment >> "$tmp_file"
   fi
 
   if [ "$(wc -l < "$tmp_file")" -le 1 ]; then

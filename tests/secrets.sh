@@ -37,7 +37,7 @@ case "$1" in
       exit 3
     fi
 
-    printf 'TEST_SECRET=value\n'
+    printf 'TEST_SECRET=hello world\n'
     ;;
   *)
     exit 4
@@ -62,8 +62,8 @@ EOF
     return 1
   fi
 
-  if ! grep -q '^TEST_SECRET=value$' "$secrets_file"; then
-    printf 'expected secrets file to include environment output\n' >&2
+  if ! grep -q '^TEST_SECRET="hello world"$' "$secrets_file"; then
+    printf 'expected secrets file to quote environment values\n' >&2
     return 1
   fi
 
