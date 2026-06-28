@@ -125,7 +125,12 @@ install_tailscaled_service() {
 check_tailscale_status() {
   log_step "Checking Tailscale status"
   if ! tailscale status >/dev/null; then
-    log_error "tailscale status failed. Run: sudo tailscale up"
+    log_step "Starting Tailscale"
+    sudo tailscale up
+  fi
+
+  if ! tailscale status >/dev/null; then
+    log_error "tailscale status failed after running sudo tailscale up."
     exit 1
   fi
 

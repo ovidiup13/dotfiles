@@ -25,3 +25,8 @@ do
     exit 1
   fi
 done
+
+if ! grep -Eq '^[[:space:]]*sudo tailscale up$' "$script_path"; then
+  printf 'missing tailscale up fallback when status fails\n' >&2
+  exit 1
+fi
