@@ -161,6 +161,8 @@ install_opencode() {
 }
 
 install_vp_cli() {
+  local vp_install_dir vp_install_home
+
   if command_exists vp; then
     return 0
   fi
@@ -171,7 +173,13 @@ install_vp_cli() {
   fi
 
   log_step "Installing Vite+ vp"
-  curl -fsSL https://vite.plus | VP_NODE_MANAGER=yes bash
+  vp_install_dir="$HOME/.vite-plus"
+  vp_install_home="$(mktemp -d)"
+  if ! curl -fsSL https://vite.plus | HOME="$vp_install_home" VP_HOME="$vp_install_dir" VP_NODE_MANAGER=yes bash; then
+    rm -rf "$vp_install_home"
+    return 1
+  fi
+  rm -rf "$vp_install_home"
 
   if [ -r "$HOME/.vite-plus/env" ]; then
     . "$HOME/.vite-plus/env"

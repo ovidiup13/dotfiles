@@ -34,6 +34,11 @@ if ! awk '/^load_bun_env\(\)/,/^}/ { print }' "$script_path" | grep -q 'PATH="\$
   exit 1
 fi
 
+if ! awk '/^install_vp_cli\(\)/,/^}/ { print }' "$script_path" | grep -q 'HOME="\$vp_install_home" VP_HOME="\$vp_install_dir" VP_NODE_MANAGER=yes bash'; then
+  printf 'Vite+ installer must run with an isolated HOME and explicit VP_HOME\n' >&2
+  exit 1
+fi
+
 for path_entry in \
   '\$VOLTA_HOME/bin' \
   '\$HOME/.opencode/bin'
