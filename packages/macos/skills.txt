@@ -1,5 +1,4 @@
 # Format: <source> <skill>
-github/awesome-copilot gh-cli
 github/awesome-copilot git-commit
 microsoft/playwright-cli playwright-cli
 mastra-ai/skills mastra
