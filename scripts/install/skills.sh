@@ -113,6 +113,7 @@ verify_installed_skills() {
   local lock_file="$HOME/.agents/.skill-lock.json"
   local entries_file="$1"
   local tmp_dir="$2"
+  local install_failed="$3"
   local installed_entries_file="$tmp_dir/installed-entries.txt"
 
   if ! command_exists jq; then
@@ -128,8 +129,13 @@ verify_installed_skills() {
   write_installed_entries "$installed_entries_file"
 
   if ! cmp -s "$entries_file" "$installed_entries_file"; then
-    log_warn "packages/macos/skills.txt does not match the installed skills in $lock_file"
-    return
+    if [ "$install_failed" -eq 1 ]; then
+      log_warn "packages/macos/skills.txt does not match the installed skills in $lock_file"
+      return
+    fi
+
+    log_error "packages/macos/skills.txt does not match the installed skills in $lock_file"
+    exit 1
   fi
 }
 
@@ -138,6 +144,7 @@ install_skills() {
   local tmp_dir="$2"
   local installed_entries_file="$tmp_dir/installed-entries.txt"
   local pending_entries_file="$tmp_dir/pending-entries.txt"
+  local install_failed=0
   local -a agent_args=()
   local agent
   local entry source skill
@@ -168,12 +175,16 @@ install_skills() {
     log_info "skills add $source --skill $skill"
     if ! skills add "$source" --global --skill "$skill" --yes "${agent_args[@]}"; then
       log_warn "Skipping failed skill: $source $skill"
+      install_failed=1
     fi
   done 3< "$pending_entries_file"
+
+  return "$install_failed"
 }
 
 main() {
   local tmp_dir entries_file names_file
+  local install_failed=0
 
   ensure_skills_cli
 
@@ -184,9 +195,9 @@ main() {
   names_file="$tmp_dir/skill-names.txt"
 
   parse_skills_manifest "$entries_file" "$names_file"
-  install_skills "$entries_file" "$tmp_dir"
+  install_skills "$entries_file" "$tmp_dir" || install_failed=1
   remove_unmanaged_skills "$names_file" "$tmp_dir"
-  verify_installed_skills "$entries_file" "$tmp_dir"
+  verify_installed_skills "$entries_file" "$tmp_dir" "$install_failed"
 }
 
 main "$@"
