@@ -11,7 +11,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
 - installs `uv` from Astral on all platforms
 - installs Basic Memory with `uv` on all platforms and configures its local OpenCode MCP server
-- installs Node.js LTS via Vite+ `vp` and the latest Go release via `goenv` on macOS
+- installs Vite+ `vp` with Node.js management enabled and the latest Go release via `goenv` on macOS
 - installs monitoring tools on demand with `./install --monitoring`, including the Beszel agent via Homebrew
 - applies selected macOS defaults during the macOS install flow
 - symlinks managed files from `home/` into `$HOME`
@@ -41,7 +41,7 @@ The bootstrap script installs the minimum prerequisites needed to clone the repo
 macOS installs support two profiles:
 
 - `main`, the default profile. This is the full local-machine setup driven by `.macos`, with the standard macOS Brewfile, Mac App Store apps, defaults, and the main-only app installers such as Tailscale, Ollama, and Boring Notch.
-- `remote`, the CLI and devtools profile. This is driven by a separate `.macos-remote` installer, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, and macOS post-link skills sync, while skipping the main-only app-style installs and macOS defaults flow.
+- `remote`, the CLI and devtools profile. This uses `.macos --macos-profile remote`, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, and macOS post-link skills sync, while skipping the main-only app-style installs and macOS defaults flow.
 
 If you don't pass `--macos-profile`, the installer uses `main` for backward compatibility.
 
@@ -54,7 +54,7 @@ Use a specific profile on macOS with either entrypoint:
 
 Profile-aware behavior on macOS:
 
-- full `./install` uses `.macos` for the `main` profile, `.macos-remote` for the `remote` profile, and still uses `.macos` for the post-link stage it triggers afterward
+- full `./install` uses `.macos` for both `main` and `remote` profiles
 - `./install --skills` accepts `--macos-profile remote|main` and forwards it to `.macos --post-link`
 - `./install --macos-defaults` accepts `--macos-profile`, but only `main` is allowed
 - `./.macos --post-link` accepts `--macos-profile remote|main`
@@ -134,8 +134,7 @@ cd ~/.dotfiles
 ## Layout
 
 - `install` is the main entrypoint
-- `.macos` handles the main macOS workstation install and shared macOS maintenance modes
-- `.macos-remote` handles the remote macOS CLI/devtools install
+- `.macos` handles both macOS profiles, macOS defaults, and post-link skills sync
 - `scripts/install/secrets.sh` syncs 1Password Environment variables to the local secrets file
 - `scripts/install/monitoring.sh` installs monitoring tools such as the Beszel agent
 - `scripts/install/macos_common.sh` contains shared macOS installer helpers used by both macOS entrypoints
@@ -148,7 +147,7 @@ cd ~/.dotfiles
 ## Development Notes
 
 - validate edited shell scripts with `bash -n path/to/script`
-- common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .macos-remote`, `bash -n .ubuntu`, `bash -n scripts/install/macos_common.sh`, `bash -n scripts/install/skills.sh`
+- common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .ubuntu`, `bash -n scripts/install/macos_common.sh`, `bash -n scripts/install/skills.sh`
 - rerun the macOS post-link flow with `./install --skills --macos-profile main` or `./install --skills --macos-profile remote`
 - rerun only the macOS defaults flow with `./install --macos-defaults --macos-profile main`
 - rerun only the monitoring flow with `./install --monitoring`
@@ -166,7 +165,6 @@ Shell syntax checks:
 bash -n install
 bash -n bootstrap
 bash -n .macos
-bash -n .macos-remote
 bash -n scripts/install/skills.sh
 ```
 

@@ -5,13 +5,6 @@ path_prepend() {
   esac
 }
 
-path_append() {
-  case ":$PATH:" in
-    *":$1:"*) ;;
-    *) PATH="${PATH:+$PATH:}$1" ;;
-  esac
-}
-
 for dir in \
   "$HOME/.local/bin" \
   "$HOME/bin" \

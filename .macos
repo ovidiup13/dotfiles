@@ -71,14 +71,28 @@ install_mas_apps() {
 }
 
 install_brew_bundles() {
+  local profile="$1"
+
   log_step "Applying Brewfile: $REPO_ROOT/packages/base/Brewfile"
   run_brew_bundle "$REPO_ROOT/packages/base/Brewfile"
 
-  log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile"
-  run_brew_bundle "$REPO_ROOT/packages/macos/Brewfile"
+  case "$profile" in
+    remote)
+      log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile.remote"
+      run_brew_bundle "$REPO_ROOT/packages/macos/Brewfile.remote"
+      ;;
+    main)
+      log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile"
+      run_brew_bundle "$REPO_ROOT/packages/macos/Brewfile"
 
-  log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile.mas"
-  install_mas_apps
+      log_step "Applying Brewfile: $REPO_ROOT/packages/macos/Brewfile.mas"
+      install_mas_apps
+      ;;
+    *)
+      log_error "Invalid macOS profile: $profile. Expected remote or main."
+      exit 1
+      ;;
+  esac
 }
 
 validate_macos_profile() {
@@ -128,6 +142,8 @@ configure_sudo_touch_id() {
 }
 
 run_macos_full_shared_setup() {
+  local profile="$1"
+
   ensure_command_line_tools
   ensure_homebrew
   if ! load_homebrew_env; then
@@ -135,12 +151,17 @@ run_macos_full_shared_setup() {
     exit 1
   fi
 
-  install_brew_bundles
+  install_brew_bundles "$profile"
 }
 
 run_macos_full_shared_runtime_shell() {
-  install_macos_tailscale
-  install_macos_ollama
+  local profile="$1"
+
+  if [ "$profile" = "main" ]; then
+    install_macos_tailscale
+    install_macos_ollama
+  fi
+
   install_macos_runtimes
   install_macos_oh_my_zsh
 }
@@ -207,14 +228,18 @@ main() {
 
   case "$mode" in
     full)
-      if [ "$macos_profile" = "remote" ]; then
-        exec bash "$REPO_ROOT/.macos-remote"
+      run_macos_full_shared_setup "$macos_profile"
+
+      if [ "$macos_profile" = "main" ]; then
+        run_macos_full_main_only_pre_runtime_shell
       fi
 
-      run_macos_full_shared_setup
-      run_macos_full_main_only_pre_runtime_shell
-      run_macos_full_shared_runtime_shell
-      run_macos_full_main_only_finalize
+      run_macos_full_shared_runtime_shell "$macos_profile"
+
+      if [ "$macos_profile" = "main" ]; then
+        run_macos_full_main_only_finalize
+      fi
+
       run_macos_full_shared_finalize
       ;;
     --post-link)

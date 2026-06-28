@@ -27,37 +27,13 @@ main() {
     arg="$1"
 
     case "$arg" in
-      --skills)
+      --skills|--macos-defaults|--secrets|--monitoring)
         if [ "$mode" != "full" ]; then
           log_error "Only one install mode can be selected: --skills, --macos-defaults, --secrets, or --monitoring."
           exit 1
         fi
 
-        mode="--skills"
-        ;;
-      --macos-defaults)
-        if [ "$mode" != "full" ]; then
-          log_error "Only one install mode can be selected: --skills, --macos-defaults, --secrets, or --monitoring."
-          exit 1
-        fi
-
-        mode="--macos-defaults"
-        ;;
-      --secrets)
-        if [ "$mode" != "full" ]; then
-          log_error "Only one install mode can be selected: --skills, --macos-defaults, --secrets, or --monitoring."
-          exit 1
-        fi
-
-        mode="--secrets"
-        ;;
-      --monitoring)
-        if [ "$mode" != "full" ]; then
-          log_error "Only one install mode can be selected: --skills, --macos-defaults, --secrets, or --monitoring."
-          exit 1
-        fi
-
-        mode="--monitoring"
+        mode="$arg"
         ;;
       --1password-environment)
         shift
@@ -149,13 +125,8 @@ main() {
 
   case "$platform" in
     macos)
-      if [ "$macos_profile" = "remote" ]; then
-        log_step "Running macOS remote setup"
-        bash "$REPO_ROOT/.macos-remote"
-      else
-        log_step "Running macOS setup"
-        "$REPO_ROOT/.macos" --macos-profile "$macos_profile"
-      fi
+      log_step "Running macOS setup"
+      "$REPO_ROOT/.macos" --macos-profile "$macos_profile"
       ;;
     ubuntu)
       log_step "Running Ubuntu setup"

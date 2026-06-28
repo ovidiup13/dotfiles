@@ -7,7 +7,7 @@ export GOENV_ROOT="${GOENV_ROOT:-$HOME/.goenv}"
 install_macos_runtimes() {
   install_uv
   install_basic_memory
-  install_vp_node_lts
+  install_vp_cli
   install_goenv_latest
 }
 
@@ -71,6 +71,8 @@ install_bun() {
   load_bun_env
 
   if command_exists bun; then
+    log_step "Upgrading Bun"
+    bun upgrade
     return 0
   fi
 
@@ -80,7 +82,7 @@ install_bun() {
   fi
 
   log_step "Installing Bun"
-  curl -fsSL https://bun.sh/install | bash
+  curl -fsSL https://bun.com/install | bash
   load_bun_env
 
   if ! command_exists bun; then
@@ -169,7 +171,7 @@ install_vp_cli() {
   fi
 
   log_step "Installing Vite+ vp"
-  curl -fsSL https://vite.plus | bash
+  curl -fsSL https://vite.plus | VP_NODE_MANAGER=yes bash
 
   if [ -r "$HOME/.vite-plus/env" ]; then
     . "$HOME/.vite-plus/env"
@@ -179,18 +181,6 @@ install_vp_cli() {
     log_warn "Skipping Node.js runtime setup because vp is not available after installation."
     return 1
   fi
-}
-
-install_vp_node_lts() {
-  if ! install_vp_cli; then
-    return
-  fi
-
-  log_step "Installing Node.js LTS with vp"
-  vp env setup --refresh
-  vp env on
-  vp env default lts
-  vp env install lts
 }
 
 install_goenv_latest() {

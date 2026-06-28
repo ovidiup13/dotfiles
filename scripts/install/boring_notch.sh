@@ -2,10 +2,6 @@
 
 set -euo pipefail
 
-resolve_boring_notch_dmg_url() {
-  printf 'https://github.com/TheBoredTeam/boring.notch/releases/latest/download/boringNotch.dmg\n'
-}
-
 clear_boring_notch_quarantine() {
   local app_path="/Applications/boringNotch.app"
 
@@ -33,12 +29,7 @@ install_macos_boring_notch() {
     return
   fi
 
-  dmg_url="$(resolve_boring_notch_dmg_url)"
-
-  if [ -z "$dmg_url" ]; then
-    log_error "Could not resolve the Boring Notch macOS download URL."
-    exit 1
-  fi
+  dmg_url="https://github.com/TheBoredTeam/boring.notch/releases/latest/download/boringNotch.dmg"
 
   tmp_dmg="$(mktemp -t boring-notch-installer).dmg"
   mount_point=""
