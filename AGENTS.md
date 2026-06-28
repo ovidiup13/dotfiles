@@ -8,14 +8,14 @@ Agents working here should optimize for safe, repeatable shell-script changes.
 The main workflows are:
 - bootstrap a new machine with `bootstrap`
 - run the full installer with `./install`
-- run macOS-only post-link skill sync with `./install --skills`
+- relink vendored agent skills with `./install --skills`
 - manage symlinked files under `home/`
 
 ## Repository Layout
 
 - `install` is the main entrypoint
 - `bootstrap` installs prerequisites, clones or updates the repo, then runs `install`
-- `.macos` handles macOS setup, Homebrew packages, runtimes, shell tooling, and skills sync
+- `.macos` handles macOS setup, Homebrew packages, runtimes, and shell tooling
 - `.macos-remote` handles the remote macOS CLI/devtools profile
 - `.ubuntu` handles Ubuntu package setup and shell prerequisites
 - `scripts/lib/` contains shared helpers
@@ -23,7 +23,7 @@ The main workflows are:
 - `packages/base/Brewfile` contains shared Homebrew packages
 - `packages/macos/Brewfile`, `packages/macos/Brewfile.remote`, and `packages/macos/Brewfile.mas` contain macOS packages
 - `packages/ubuntu/apt.txt` contains Ubuntu packages
-- `packages/macos/skills.txt` contains exact skill mappings as `<source> <skill>`
+- `home/.agents/skills` contains vendored agent skills
 - `home/` contains files that are symlinked into `$HOME`
 
 ## Agent Rules Discovery
@@ -43,13 +43,12 @@ Validation is mostly shell syntax checking plus targeted smoke tests.
 ### Primary Commands
 
 - Full install: `./install`
-- macOS skills sync only: `./install --skills`
+- vendored skills relink only: `./install --skills`
 - 1Password secrets sync only: `./install --secrets`
 - Monitoring tools only: `./install --monitoring`
 - Bootstrap flow: `./bootstrap`
 - macOS setup directly: `./.macos`
 - remote macOS setup directly: `./.macos-remote`
-- macOS post-link skills sync: `./.macos --post-link`
 - Ubuntu setup directly: `./.ubuntu`
 
 ### Syntax Checks
@@ -74,14 +73,13 @@ There is no single-test framework, so the closest equivalent is validating one s
 - Smoke test one installer path: `./install --skills`
 - Smoke test 1Password secrets sync with a stubbed `op`: `./install --secrets`
 - Verify monitoring installer behavior: `./install --monitoring`
-- Smoke test macOS post-link stage only: `./.macos --post-link`
 - Smoke test Ubuntu path only: `./.ubuntu`
 
 ### Helpful Focused Checks
 
-- Verify installed skills manifest behavior: `./install --skills`
+- Verify vendored skills relink behavior: `./install --skills`
 - Verify 1Password Environment sync behavior: `./install --secrets`
-- Verify skill manifest format manually: inspect `packages/macos/skills.txt`
+- Verify vendored skills manually: inspect `home/.agents/skills`
 - Verify apt package list changes: inspect `packages/ubuntu/apt.txt`
 - Verify Brew package list changes: inspect `packages/base/Brewfile`, `packages/macos/Brewfile`, and `packages/macos/Brewfile.remote`
 
@@ -175,12 +173,11 @@ Do not assume they are installed unless you verify first.
 
 ## File-Specific Guidance
 
-### `packages/macos/skills.txt`
+### `home/.agents/skills`
 
-- Each non-comment line must be exactly `<source> <skill>`
-- Do not reintroduce wildcard installs such as `--skill '*'`
-- Keep entries unique and deterministic
-- If a source is private or flaky, prefer removing it over leaving the installer broken
+- Each skill directory should contain `SKILL.md`
+- Do not reintroduce runtime `skills add` installs
+- Keep vendored skills deterministic and reviewable
 
 ### `home/`
 

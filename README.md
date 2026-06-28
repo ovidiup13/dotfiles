@@ -7,7 +7,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - detects whether it is running on macOS or Ubuntu
 - requests `sudo` once and keeps the session alive while the install runs
 - installs platform prerequisites and packages
-- installs macOS agent skills listed in `packages/macos/skills.txt`
+- links vendored agent skills from `home/.agents/skills`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
 - installs `uv` from Astral on all platforms
 - installs Basic Memory with `uv` on all platforms and configures its local OpenCode MCP server
@@ -41,7 +41,7 @@ The bootstrap script installs the minimum prerequisites needed to clone the repo
 macOS installs support two profiles:
 
 - `main`, the default profile. This is the full local-machine setup driven by `.macos`, with the standard macOS Brewfile, Mac App Store apps, defaults, and the main-only app installers such as Tailscale, Ollama, and Boring Notch.
-- `remote`, the CLI and devtools profile. This uses `.macos --macos-profile remote`, keeps the shared base packages, runtimes, shell setup, GitHub SSH key setup, and macOS post-link skills sync, while skipping the main-only app-style installs and macOS defaults flow.
+- `remote`, the CLI and devtools profile. This uses `.macos --macos-profile remote`, keeps the shared base packages, runtimes, shell setup, and GitHub SSH key setup, while skipping the main-only app-style installs and macOS defaults flow.
 
 If you don't pass `--macos-profile`, the installer uses `main` for backward compatibility.
 
@@ -55,17 +55,16 @@ Use a specific profile on macOS with either entrypoint:
 Profile-aware behavior on macOS:
 
 - full `./install` uses `.macos` for both `main` and `remote` profiles
-- `./install --skills` accepts `--macos-profile remote|main` and forwards it to `.macos --post-link`
+- `./install --skills` relinks the vendored `home/.agents/skills` subtree
 - `./install --macos-defaults` accepts `--macos-profile`, but only `main` is allowed
-- `./.macos --post-link` accepts `--macos-profile remote|main`
 - `./.macos --defaults` accepts `--macos-profile`, but rejects `remote`
 
 For unattended installs, set `DOTFILES_GIT_NAME` and `DOTFILES_GIT_EMAIL` before running the installer.
 
-To re-run the macOS post-link tasks later, use:
+To relink vendored agent skills later, use:
 
 ```sh
-./install --skills --macos-profile main
+./install --skills
 ```
 
 To re-apply only the macOS defaults later, use:
@@ -114,7 +113,7 @@ The installer writes `~/.config/beszel/beszel-agent.env` and the agent listens o
 
 ## OpenCode
 
-The macOS post-link flow runs the exact skills sync from `packages/macos/skills.txt`, removes unmanaged global skills, and targets `universal opencode` by default. Override agents with `DOTFILES_SKILLS_AGENTS="opencode cursor"` if needed.
+Agent skills are vendored under `home/.agents/skills` and symlinked as one subtree into `~/.agents/skills`. The installer does not fetch or remove skills at runtime.
 
 After linking the dotfiles on either macOS or Linux:
 
@@ -134,12 +133,12 @@ cd ~/.dotfiles
 ## Layout
 
 - `install` is the main entrypoint
-- `.macos` handles both macOS profiles, macOS defaults, and post-link skills sync
+- `.macos` handles both macOS profiles and macOS defaults
 - `scripts/install/secrets.sh` syncs 1Password Environment variables to the local secrets file
 - `scripts/install/monitoring.sh` installs monitoring tools such as the Beszel agent
 - `scripts/install/macos_common.sh` contains shared macOS installer helpers used by both macOS entrypoints
 - `scripts/install/macos_defaults.sh` contains macOS `defaults` settings applied by `.macos`
-- `packages/macos/skills.txt` lists exact Skills CLI installs as `<source> <skill>` on macOS
+- `home/.agents/skills` contains vendored agent skills
 - `.ubuntu` handles Ubuntu prerequisites and apt installs
 - `home/` contains the files that get symlinked into `$HOME`
 - `scripts/lib/` contains shared installer helpers
@@ -148,13 +147,13 @@ cd ~/.dotfiles
 
 - validate edited shell scripts with `bash -n path/to/script`
 - common checks: `bash -n install`, `bash -n bootstrap`, `bash -n .macos`, `bash -n .ubuntu`, `bash -n scripts/install/macos_common.sh`, `bash -n scripts/install/skills.sh`
-- rerun the macOS post-link flow with `./install --skills --macos-profile main` or `./install --skills --macos-profile remote`
+- rerun the vendored skills relink with `./install --skills`
 - rerun only the macOS defaults flow with `./install --macos-defaults --macos-profile main`
 - rerun only the monitoring flow with `./install --monitoring`
 - validate monitoring changes with `bash -n install && bash -n scripts/install/monitoring.sh`
 - smoke test the operator-facing macOS flow with `./install --macos-profile remote` and `./install --macos-profile main`
 - smoke test the Ubuntu path with `./.ubuntu`
-- keep `packages/macos/skills.txt` entries to one exact `<source> <skill>` mapping per line
+- keep vendored skills under `home/.agents/skills/<skill>/SKILL.md`
 - prefer small, idempotent shell changes that preserve the existing `log_step`/`log_info`/`log_warn`/`log_error`/`log_success` output style
 
 ## Validation matrix
@@ -225,23 +224,9 @@ remote_result = run_case(
 print(remote_result.stdout + remote_result.stderr, end="")
 assert remote_result.returncode == 99
 
-def post_link_stubs(stub_dir):
-    write_exec(stub_dir / "skills", '#!/bin/sh\nif [ "$1" = "list" ]; then printf "[]\\n"; exit 0; fi\nexit 0\n')
-    write_exec(stub_dir / "opencode", '#!/bin/sh\nexit 0\n')
-
-def post_link_setup(home_dir):
-    config_dir = home_dir / ".config" / "opencode"
-    config_dir.mkdir(parents=True)
-    (config_dir / "opencode.json").write_text("{}\n")
-
-post_link_result = run_case(
-    "post-link",
-    ["./install", "--skills", "--macos-profile", "remote"],
-    extra_stubs=post_link_stubs,
-    setup=post_link_setup,
-)
-print(post_link_result.stdout + post_link_result.stderr, end="")
-assert post_link_result.returncode == 0
+skills_result = run_case("skills", ["./install", "--skills"])
+print(skills_result.stdout + skills_result.stderr, end="")
+assert skills_result.returncode == 0
 PY
 
 ./install --macos-profile invalid

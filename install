@@ -82,14 +82,9 @@ main() {
     full)
       ;;
     --skills)
-      if [ "$platform" != "macos" ]; then
-        log_error "Skills sync is currently supported only on macOS."
-        exit 1
-      fi
-
-      log_step "Syncing macOS agent skills"
-      "$REPO_ROOT/.macos" --post-link --macos-profile "$macos_profile"
-      log_success "Skills sync complete"
+      log_step "Linking vendored agent skills"
+      "$REPO_ROOT/scripts/install/skills.sh"
+      log_success "Agent skills linked"
       return
       ;;
     --macos-defaults)
@@ -145,11 +140,6 @@ main() {
   sync_1password_secrets "$onepassword_environment"
 
   configure_git_identity
-
-  if [ "$platform" = "macos" ]; then
-    log_step "Syncing macOS agent skills"
-    "$REPO_ROOT/.macos" --post-link --macos-profile "$macos_profile"
-  fi
 
   log_success "Install complete"
   log_info "Open a new shell session to pick up all changes."
