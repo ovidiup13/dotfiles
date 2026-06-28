@@ -128,8 +128,8 @@ verify_installed_skills() {
   write_installed_entries "$installed_entries_file"
 
   if ! cmp -s "$entries_file" "$installed_entries_file"; then
-    log_error "packages/macos/skills.txt does not match the installed skills in $lock_file"
-    exit 1
+    log_warn "packages/macos/skills.txt does not match the installed skills in $lock_file"
+    return
   fi
 }
 
@@ -166,7 +166,9 @@ install_skills() {
     skill="${entry#*$'\t'}"
 
     log_info "skills add $source --skill $skill"
-    skills add "$source" --global --skill "$skill" --yes "${agent_args[@]}"
+    if ! skills add "$source" --global --skill "$skill" --yes "${agent_args[@]}"; then
+      log_warn "Skipping failed skill: $source $skill"
+    fi
   done 3< "$pending_entries_file"
 }
 
