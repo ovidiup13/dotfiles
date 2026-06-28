@@ -118,14 +118,14 @@ if [ "${VP_NODE_MANAGER:-}" != "yes" ]; then
   exit 43
 fi
 
-mkdir -p "$HOME/.vite-plus/bin"
-cat > "$HOME/.vite-plus/bin/vp" <<'VP'
+mkdir -p "$VP_HOME/bin"
+cat > "$VP_HOME/bin/vp" <<'VP'
 #!/usr/bin/env bash
 exit 0
 VP
-chmod +x "$HOME/.vite-plus/bin/vp"
-cat > "$HOME/.vite-plus/env" <<'ENV'
-PATH="$HOME/.vite-plus/bin:$PATH"
+chmod +x "$VP_HOME/bin/vp"
+cat > "$VP_HOME/env" <<ENV
+PATH="$VP_HOME/bin:\$PATH"
 export PATH
 ENV
 SCRIPT
@@ -145,6 +145,37 @@ EOF
   rm -rf "$tmp_dir"
 }
 
+test_load_cargo_env_honors_cargo_home() {
+  local tmp_dir
+
+  tmp_dir="$(mktemp -d)"
+
+  mkdir -p "$tmp_dir/cargo"
+  cat > "$tmp_dir/cargo/env" <<'EOF'
+RUNTIMES_TEST_CARGO_ENV=loaded
+export RUNTIMES_TEST_CARGO_ENV
+EOF
+
+  (
+    export HOME="$tmp_dir/home"
+    export CARGO_HOME="$tmp_dir/cargo"
+    unset RUNTIMES_TEST_CARGO_ENV
+
+    . "$REPO_ROOT/scripts/lib/common.sh"
+    . "$REPO_ROOT/scripts/install/runtimes.sh"
+
+    load_cargo_env
+
+    if [ "${RUNTIMES_TEST_CARGO_ENV:-}" != "loaded" ]; then
+      printf 'expected load_cargo_env to source CARGO_HOME/env\n' >&2
+      return 1
+    fi
+  )
+
+  rm -rf "$tmp_dir"
+}
+
 test_bun_upgrade_when_already_installed
 test_macos_runtimes_do_not_run_vp_env_subcommands
 test_vp_installer_disables_node_manager_prompt
+test_load_cargo_env_honors_cargo_home

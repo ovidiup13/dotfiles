@@ -65,8 +65,8 @@ install_basic_memory() {
 }
 
 load_cargo_env() {
-  if [ -r "$HOME/.cargo/env" ]; then
-    . "$HOME/.cargo/env"
+  if [ -r "${CARGO_HOME:-$HOME/.cargo}/env" ]; then
+    . "${CARGO_HOME:-$HOME/.cargo}/env"
   fi
 }
 
