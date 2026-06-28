@@ -77,6 +77,7 @@ EOF
 
     install_uv() { :; }
     install_basic_memory() { :; }
+    install_rustup() { :; }
     install_goenv_latest() { :; }
 
     install_macos_runtimes >/dev/null

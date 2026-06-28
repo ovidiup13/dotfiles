@@ -9,6 +9,7 @@ path_path="$repo_root/home/.config/shell/path.sh"
 
 for function_name in \
   install_bun \
+  install_rustup \
   install_volta \
   install_node_lts_with_volta \
   install_opencode
@@ -50,6 +51,7 @@ do
 done
 
 for ubuntu_step in \
+  install_rustup \
   install_bun \
   install_volta \
   install_node_lts_with_volta \
@@ -60,3 +62,8 @@ do
     exit 1
   fi
 done
+
+if ! awk '/^install_macos_runtimes\(\)/,/^}/ { print }' "$script_path" | grep -q '  install_rustup$'; then
+  printf 'missing macOS runtime step: install_rustup\n' >&2
+  exit 1
+fi

@@ -8,12 +8,14 @@ install_macos_runtimes() {
   install_uv
   install_basic_memory
   install_vp_cli
+  install_rustup
   install_goenv_latest
 }
 
 install_ubuntu_runtimes() {
   install_uv
   install_basic_memory
+  install_rustup
   install_bun
   install_volta
   install_node_lts_with_volta
@@ -60,6 +62,34 @@ install_basic_memory() {
 
   log_step "Installing Basic Memory with uv"
   uv tool install basic-memory
+}
+
+load_cargo_env() {
+  if [ -r "$HOME/.cargo/env" ]; then
+    . "$HOME/.cargo/env"
+  fi
+}
+
+install_rustup() {
+  load_cargo_env
+
+  if command_exists rustup; then
+    return 0
+  fi
+
+  if ! command_exists curl; then
+    log_warn "Skipping Rust setup because curl is not installed."
+    return 1
+  fi
+
+  log_step "Installing Rust with rustup"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+  load_cargo_env
+
+  if ! command_exists rustup; then
+    log_warn "Rust was installed but rustup is not available in this shell."
+    return 1
+  fi
 }
 
 load_bun_env() {

@@ -9,7 +9,7 @@ Cross-platform dotfiles with a single `./install` entrypoint.
 - installs platform prerequisites and packages
 - links vendored agent skills from `home/.agents/skills`
 - installs Tailscale on macOS from the official standalone package, adds a `tailscale` CLI launcher, and installs Ubuntu via the upstream install script
-- installs `uv` from Astral on all platforms
+- installs `uv` from Astral and Rust via the official `rustup` installer on all platforms
 - installs Basic Memory with `uv` on all platforms and configures its local OpenCode MCP server
 - installs Vite+ `vp` with Node.js management enabled and the latest Go release via `goenv` on macOS
 - installs monitoring tools on demand with `./install --monitoring`, including the Beszel agent via Homebrew
