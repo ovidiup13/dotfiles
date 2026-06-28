@@ -4,3 +4,4 @@
 .secrets/
 home/.secrets/
 **/.secrets/tokens
+home/.agents/.skill-lock.json

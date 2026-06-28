@@ -18,4 +18,7 @@ if command -v direnv >/dev/null 2>&1; then
   eval "$(direnv hook bash)"
 fi
 
-. "$HOME/.local/bin/env"
+if [ -z "${DOTFILES_LOCAL_BIN_ENV_LOADED:-}" ] && [ -r "$HOME/.local/bin/env" ]; then
+  DOTFILES_LOCAL_BIN_ENV_LOADED=1
+  . "$HOME/.local/bin/env"
+fi
