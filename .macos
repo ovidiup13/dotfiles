@@ -189,9 +189,9 @@ main() {
     arg="$1"
 
     case "$arg" in
-      full|--post-link|--defaults)
+      full|--defaults)
         if [ "$mode_set" -eq 1 ]; then
-          log_error "Only one .macos mode can be selected: full, --post-link, or --defaults."
+          log_error "Only one .macos mode can be selected: full or --defaults."
           exit 1
         fi
 
@@ -241,13 +241,6 @@ main() {
       fi
 
       run_macos_full_shared_finalize
-      ;;
-    --post-link)
-      if ! load_homebrew_env; then
-        log_error "Homebrew is required but was not found after installation."
-        exit 1
-      fi
-      "$REPO_ROOT/scripts/install/skills.sh"
       ;;
     --defaults)
       apply_macos_defaults
