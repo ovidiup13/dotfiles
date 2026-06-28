@@ -175,7 +175,45 @@ EOF
   rm -rf "$tmp_dir"
 }
 
+test_install_rustup_sets_default_toolchain_when_rustup_exists_without_rustc() {
+  local tmp_dir
+  local bin_dir
+  local rustup_log
+
+  tmp_dir="$(mktemp -d)"
+  bin_dir="$tmp_dir/bin"
+  rustup_log="$tmp_dir/rustup.log"
+
+  mkdir -p "$bin_dir" "$tmp_dir/home"
+  cat > "$bin_dir/rustup" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' "$*" >> "$RUSTUP_TEST_LOG"
+EOF
+  chmod +x "$bin_dir/rustup"
+
+  (
+    export HOME="$tmp_dir/home"
+    export PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin"
+    export RUSTUP_TEST_LOG="$rustup_log"
+
+    . "$REPO_ROOT/scripts/lib/common.sh"
+    . "$REPO_ROOT/scripts/install/runtimes.sh"
+
+    install_rustup >/dev/null
+  )
+
+  if ! grep -q '^default stable$' "$rustup_log"; then
+    printf 'expected install_rustup to run rustup default stable when rustc is missing\n' >&2
+    return 1
+  fi
+
+  rm -rf "$tmp_dir"
+}
+
 test_bun_upgrade_when_already_installed
 test_macos_runtimes_do_not_run_vp_env_subcommands
 test_vp_installer_disables_node_manager_prompt
 test_load_cargo_env_honors_cargo_home
+test_install_rustup_sets_default_toolchain_when_rustup_exists_without_rustc

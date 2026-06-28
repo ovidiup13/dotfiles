@@ -74,6 +74,13 @@ install_rustup() {
   load_cargo_env
 
   if command_exists rustup; then
+    if command_exists rustc && command_exists cargo && rustup show active-toolchain >/dev/null 2>&1; then
+      return 0
+    fi
+
+    log_step "Installing Rust stable toolchain with rustup"
+    rustup default stable
+    load_cargo_env
     return 0
   fi
 
