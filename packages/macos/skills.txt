@@ -1,5 +1,9 @@
 # Format: <source> <skill>
 github/awesome-copilot git-commit
+github.com/mattpocock/skills handoff
+github.com/mattpocock/skills teach
+github.com/mattpocock/skills to-issues
+github.com/mattpocock/skills to-prd
 microsoft/playwright-cli playwright-cli
 mastra-ai/skills mastra
 sickn33/antigravity-awesome-skills docker-expert
