@@ -5,6 +5,7 @@ ca-certificates
 curl
 direnv
 fd-find
+fontconfig
 fzf
 git
 git-lfs
