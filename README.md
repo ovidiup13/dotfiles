@@ -118,9 +118,10 @@ Agent skills are vendored under `home/.agents/skills` and symlinked as one subtr
 After linking the dotfiles on either macOS or Linux:
 
 - `opencode` connects to Basic Memory through `uvx basic-memory mcp`
-- `opencode` loads Superpowers from `superpowers@git+https://github.com/obra/superpowers.git` through its native plugin manager
+- `opencode` loads Ponytail from `@dietrichgebert/ponytail` through its native plugin manager
+- `opencode` loads Caveman from `./plugins/caveman/plugin.js`, with lite mode pinned in `~/.config/opencode/AGENTS.md` and `~/.config/caveman/config.json`
 
-OpenCode loads plugins at startup. After changing `home/.config/opencode/opencode.json`, quit and restart `opencode` so it installs and registers the Superpowers skills.
+OpenCode loads plugins at startup. After changing `home/.config/opencode/opencode.json`, quit and restart `opencode` so it installs and registers configured plugins.
 
 If you already cloned the repo, you can still run the local installer directly:
 
